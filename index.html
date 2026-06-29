@@ -5,32 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
     <title>計算力トレーニング</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="styles.css?v=compact-1">
+    <link rel="stylesheet" href="styles.css?v=levels-1">
   </head>
   <body>
     <main class="app-shell">
       <section class="training-panel" aria-labelledby="app-title">
         <header class="app-header">
           <div>
-            <p class="eyebrow">2桁 ÷ 2〜9</p>
+            <p class="eyebrow">割り算 5レベル</p>
             <h1 id="app-title">計算力トレーニング</h1>
           </div>
-          <div class="header-badge" aria-label="20問のトレーニング">20問</div>
+          <div class="header-badge" aria-label="5段階のトレーニング">Lv</div>
         </header>
 
         <section id="setupPanel" class="setup-panel" aria-label="出題設定">
           <div class="section-heading">
-            <h2>出題パターン</h2>
+            <h2>レベル</h2>
           </div>
 
-          <div class="mode-options" role="radiogroup" aria-label="出題パターン">
-            <button class="mode-card is-active" type="button" role="radio" aria-checked="true" data-mode="exact">
-              <span class="mode-title">余りなし</span>
-              <span class="mode-copy">割り切れる問題だけ。答えは商のみ。</span>
+          <div class="mode-options" role="radiogroup" aria-label="レベル">
+            <button class="mode-card is-active" type="button" role="radio" aria-checked="true" data-level="1">
+              <span class="mode-title">レベル1</span>
+              <span class="mode-meta">余りなし・36問</span>
+              <span class="mode-copy">1〜2桁 ÷ 2〜9。商は1桁。</span>
             </button>
-            <button class="mode-card" type="button" role="radio" aria-checked="false" data-mode="mixed">
-              <span class="mode-title">余りありかも</span>
-              <span class="mode-copy">商と余りを入力。余りなしは 0。</span>
+            <button class="mode-card" type="button" role="radio" aria-checked="false" data-level="2">
+              <span class="mode-title">レベル2</span>
+              <span class="mode-meta">余りあり・18問</span>
+              <span class="mode-copy">1〜2桁 ÷ 2〜9。商と余りを入力。</span>
+            </button>
+            <button class="mode-card" type="button" role="radio" aria-checked="false" data-level="3">
+              <span class="mode-title">レベル3</span>
+              <span class="mode-meta">余りなし・36問</span>
+              <span class="mode-copy">2〜4桁 ÷ 2〜9系の数。商も10倍系。</span>
+            </button>
+            <button class="mode-card" type="button" role="radio" aria-checked="false" data-level="4">
+              <span class="mode-title">レベル4</span>
+              <span class="mode-meta">余りなし・36問</span>
+              <span class="mode-copy">2桁 ÷ 2〜9。割り切れる問題。</span>
+            </button>
+            <button class="mode-card" type="button" role="radio" aria-checked="false" data-level="5">
+              <span class="mode-title">レベル5</span>
+              <span class="mode-meta">余りあり・18問</span>
+              <span class="mode-copy">2桁 ÷ 2〜9。商と余りを入力。</span>
             </button>
           </div>
 
@@ -41,7 +58,7 @@
           <div class="game-status">
             <div>
               <span class="status-label">問題</span>
-              <strong id="progressText">1 / 20</strong>
+              <strong id="progressText">1 / 36</strong>
             </div>
             <div>
               <span class="status-label">タイム</span>
@@ -97,7 +114,11 @@
 
         <section id="resultPanel" class="result-panel" aria-label="結果" hidden>
           <p class="eyebrow">完了</p>
-          <h2>20問すべて正解</h2>
+          <h2 id="resultTitle">レベル1 完了</h2>
+          <div class="result-grade" aria-label="成果">
+            <span id="gradeText">◎</span>
+            <span id="gradeLabel">成果</span>
+          </div>
           <dl class="result-stats">
             <div>
               <dt>タイム</dt>
@@ -109,13 +130,13 @@
             </div>
           </dl>
           <div class="result-actions">
-            <button id="retryButton" class="primary-action" type="button">同じパターンでもう一度</button>
-            <button id="backToSetupButton" class="secondary-action" type="button">パターンを選び直す</button>
+            <button id="retryButton" class="primary-action" type="button">同じレベルでもう一度</button>
+            <button id="backToSetupButton" class="secondary-action" type="button">レベルを選び直す</button>
           </div>
         </section>
       </section>
     </main>
 
-    <script src="app.js?v=compact-1"></script>
+    <script src="app.js?v=levels-1"></script>
   </body>
 </html>

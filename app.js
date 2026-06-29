@@ -1,16 +1,61 @@
-const TOTAL_QUESTIONS = 20;
-const MIN_DIVIDEND = 10;
-const MAX_DIVIDEND = 99;
 const MIN_DIVISOR = 2;
 const MAX_DIVISOR = 9;
 
-const modeLabels = {
-  exact: "余りなし",
-  mixed: "余りありかも",
+const levels = {
+  1: {
+    id: "1",
+    label: "レベル1",
+    questionCount: 36,
+    hasRemainderInput: false,
+    goldMs: 30000,
+    silverMs: 50000,
+    quotientMaxLength: 1,
+    createQuestion: createLevel1Question,
+  },
+  2: {
+    id: "2",
+    label: "レベル2",
+    questionCount: 18,
+    hasRemainderInput: true,
+    goldMs: 30000,
+    silverMs: 55000,
+    quotientMaxLength: 1,
+    createQuestion: createLevel2Question,
+  },
+  3: {
+    id: "3",
+    label: "レベル3",
+    questionCount: 36,
+    hasRemainderInput: false,
+    goldMs: 50000,
+    silverMs: 90000,
+    quotientMaxLength: 4,
+    createQuestion: createLevel3Question,
+  },
+  4: {
+    id: "4",
+    label: "レベル4",
+    questionCount: 36,
+    hasRemainderInput: false,
+    goldMs: 35000,
+    silverMs: 60000,
+    quotientMaxLength: 2,
+    createQuestion: createLevel4Question,
+  },
+  5: {
+    id: "5",
+    label: "レベル5",
+    questionCount: 18,
+    hasRemainderInput: true,
+    goldMs: 35000,
+    silverMs: 60000,
+    quotientMaxLength: 2,
+    createQuestion: createLevel5Question,
+  },
 };
 
 const state = {
-  selectedMode: "exact",
+  selectedLevel: "1",
   questions: [],
   currentIndex: 0,
   answers: {
@@ -31,7 +76,7 @@ const elements = {
   restartButton: document.querySelector("#restartButton"),
   retryButton: document.querySelector("#retryButton"),
   backToSetupButton: document.querySelector("#backToSetupButton"),
-  modeButtons: [...document.querySelectorAll("[data-mode]")],
+  levelButtons: [...document.querySelectorAll("[data-level]")],
   modeLabel: document.querySelector("#modeLabel"),
   progressText: document.querySelector("#progressText"),
   timerText: document.querySelector("#timerText"),
@@ -46,6 +91,9 @@ const elements = {
   feedbackText: document.querySelector("#feedbackText"),
   keypad: document.querySelector(".keypad"),
   nextFieldButton: document.querySelector("#nextFieldButton"),
+  resultTitle: document.querySelector("#resultTitle"),
+  gradeText: document.querySelector("#gradeText"),
+  gradeLabel: document.querySelector("#gradeLabel"),
   finalTimeText: document.querySelector("#finalTimeText"),
   mistakeText: document.querySelector("#mistakeText"),
 };
@@ -54,30 +102,11 @@ function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function createExactQuestion() {
-  const divisor = randomInt(MIN_DIVISOR, MAX_DIVISOR);
-  const minQuotient = Math.ceil(MIN_DIVIDEND / divisor);
-  const maxQuotient = Math.floor(MAX_DIVIDEND / divisor);
-  const quotient = randomInt(minQuotient, maxQuotient);
-  const dividend = quotient * divisor;
-
-  return {
-    dividend,
-    divisor,
-    quotient,
-    remainder: 0,
-  };
+function randomItem(items) {
+  return items[randomInt(0, items.length - 1)];
 }
 
-function createRemainderQuestion() {
-  let dividend = randomInt(MIN_DIVIDEND, MAX_DIVIDEND);
-  let divisor = randomInt(MIN_DIVISOR, MAX_DIVISOR);
-
-  while (dividend % divisor === 0) {
-    dividend = randomInt(MIN_DIVIDEND, MAX_DIVIDEND);
-    divisor = randomInt(MIN_DIVISOR, MAX_DIVISOR);
-  }
-
+function createQuestion(dividend, divisor) {
   return {
     dividend,
     divisor,
@@ -86,13 +115,76 @@ function createRemainderQuestion() {
   };
 }
 
-function generateQuestions(mode) {
+function createLevel1Question() {
+  const divisor = randomInt(MIN_DIVISOR, MAX_DIVISOR);
+  const quotient = randomInt(1, 9);
+
+  return createQuestion(divisor * quotient, divisor);
+}
+
+function createLevel2Question() {
+  const divisor = randomInt(MIN_DIVISOR, MAX_DIVISOR);
+  const quotient = randomInt(1, 9);
+  const remainder = randomInt(0, divisor - 1);
+
+  return createQuestion(divisor * quotient + remainder, divisor);
+}
+
+function createLevel3Question() {
+  const divisors = createPowerOfTenNumbers(2, 9999);
+  const quotients = createPowerOfTenNumbers(1, 9999);
+
+  while (true) {
+    const divisor = randomItem(divisors);
+    const quotient = randomItem(quotients);
+    const dividend = divisor * quotient;
+
+    if (dividend >= 10 && dividend <= 9999) {
+      return createQuestion(dividend, divisor);
+    }
+  }
+}
+
+function createLevel4Question() {
+  const divisor = randomInt(MIN_DIVISOR, MAX_DIVISOR);
+  const minQuotient = Math.ceil(10 / divisor);
+  const maxQuotient = Math.floor(99 / divisor);
+  const quotient = randomInt(minQuotient, maxQuotient);
+
+  return createQuestion(divisor * quotient, divisor);
+}
+
+function createLevel5Question() {
+  const divisor = randomInt(MIN_DIVISOR, MAX_DIVISOR);
+  const quotient = randomInt(Math.ceil(10 / divisor), Math.floor(99 / divisor));
+  const maxRemainder = Math.min(divisor - 1, 99 - divisor * quotient);
+  const remainder = randomInt(0, maxRemainder);
+
+  return createQuestion(divisor * quotient + remainder, divisor);
+}
+
+function createPowerOfTenNumbers(min, max) {
+  const numbers = [];
+
+  for (let base = MIN_DIVISOR; base <= MAX_DIVISOR; base += 1) {
+    for (let multiplier = 1; base * multiplier <= max; multiplier *= 10) {
+      const value = base * multiplier;
+
+      if (value >= min) {
+        numbers.push(value);
+      }
+    }
+  }
+
+  return numbers;
+}
+
+function generateQuestions(level) {
   const questions = [];
   const seen = new Set();
 
-  while (questions.length < TOTAL_QUESTIONS) {
-    const shouldHaveRemainder = mode === "mixed" && Math.random() < 0.7;
-    const question = shouldHaveRemainder ? createRemainderQuestion() : createExactQuestion();
+  while (questions.length < level.questionCount) {
+    const question = level.createQuestion();
     const key = `${question.dividend}/${question.divisor}`;
 
     if (!seen.has(key)) {
@@ -131,18 +223,22 @@ function stopTimer() {
   }
 }
 
-function setSelectedMode(mode) {
-  state.selectedMode = mode;
+function getCurrentLevel() {
+  return levels[state.selectedLevel];
+}
 
-  elements.modeButtons.forEach((button) => {
-    const isActive = button.dataset.mode === mode;
+function setSelectedLevel(levelId) {
+  state.selectedLevel = levelId;
+
+  elements.levelButtons.forEach((button) => {
+    const isActive = button.dataset.level === levelId;
     button.classList.toggle("is-active", isActive);
     button.setAttribute("aria-checked", String(isActive));
   });
 }
 
 function setActiveField(field) {
-  if (state.selectedMode === "exact") {
+  if (!getCurrentLevel().hasRemainderInput) {
     state.activeField = "quotient";
   } else {
     state.activeField = field;
@@ -166,19 +262,20 @@ function renderAnswer() {
 }
 
 function renderQuestion() {
+  const level = getCurrentLevel();
   const question = state.questions[state.currentIndex];
   const answeredCount = state.currentIndex;
 
-  elements.modeLabel.textContent = modeLabels[state.selectedMode];
+  elements.modeLabel.textContent = level.label;
   elements.dividendText.textContent = question.dividend;
   elements.divisorText.textContent = question.divisor;
-  elements.progressText.textContent = `${state.currentIndex + 1} / ${TOTAL_QUESTIONS}`;
-  elements.progressFill.style.width = `${(answeredCount / TOTAL_QUESTIONS) * 100}%`;
-  elements.remainderField.hidden = state.selectedMode === "exact";
-  elements.answerArea.classList.toggle("is-single", state.selectedMode === "exact");
-  elements.keypad.classList.toggle("is-exact", state.selectedMode === "exact");
-  elements.nextFieldButton.disabled = state.selectedMode === "exact";
-  elements.nextFieldButton.hidden = state.selectedMode === "exact";
+  elements.progressText.textContent = `${state.currentIndex + 1} / ${level.questionCount}`;
+  elements.progressFill.style.width = `${(answeredCount / level.questionCount) * 100}%`;
+  elements.remainderField.hidden = !level.hasRemainderInput;
+  elements.answerArea.classList.toggle("is-single", !level.hasRemainderInput);
+  elements.keypad.classList.toggle("is-exact", !level.hasRemainderInput);
+  elements.nextFieldButton.disabled = !level.hasRemainderInput;
+  elements.nextFieldButton.hidden = !level.hasRemainderInput;
   elements.feedbackText.textContent = "";
   elements.feedbackText.classList.remove("is-correct");
   resetAnswer();
@@ -191,7 +288,9 @@ function showPanel(panel) {
 }
 
 function startGame() {
-  state.questions = generateQuestions(state.selectedMode);
+  const level = getCurrentLevel();
+
+  state.questions = generateQuestions(level);
   state.currentIndex = 0;
   state.mistakes = 0;
   showPanel("game");
@@ -214,9 +313,10 @@ function markWrong(message) {
 }
 
 function submitAnswer() {
+  const level = getCurrentLevel();
   const question = state.questions[state.currentIndex];
   const quotient = getNumericAnswer("quotient");
-  const remainder = state.selectedMode === "exact" ? 0 : getNumericAnswer("remainder");
+  const remainder = level.hasRemainderInput ? getNumericAnswer("remainder") : 0;
 
   if (quotient === null) {
     markWrong("商を入力してください");
@@ -235,7 +335,7 @@ function submitAnswer() {
     state.currentIndex += 1;
 
     window.setTimeout(() => {
-      if (state.currentIndex >= TOTAL_QUESTIONS) {
+      if (state.currentIndex >= level.questionCount) {
         finishGame();
       } else {
         renderQuestion();
@@ -247,17 +347,40 @@ function submitAnswer() {
 }
 
 function finishGame() {
+  const level = getCurrentLevel();
   const elapsed = Date.now() - state.startedAt;
+  const grade = getGrade(level, elapsed, state.mistakes);
+
   stopTimer();
   elements.progressFill.style.width = "100%";
+  elements.resultTitle.textContent = `${level.label} 完了`;
+  elements.gradeText.textContent = grade.symbol;
+  elements.gradeLabel.textContent = grade.label;
   elements.finalTimeText.textContent = formatTime(elapsed);
   elements.mistakeText.textContent = `${state.mistakes}回`;
   showPanel("result");
 }
 
+function getGrade(level, elapsed, mistakes) {
+  if (mistakes > 0) {
+    return { symbol: "▲", label: "ミスあり" };
+  }
+
+  if (elapsed <= level.goldMs) {
+    return { symbol: "◎", label: "目標達成" };
+  }
+
+  if (elapsed <= level.silverMs) {
+    return { symbol: "○", label: "合格" };
+  }
+
+  return { symbol: "△", label: "もう少し" };
+}
+
 function appendDigit(digit) {
+  const level = getCurrentLevel();
   const field = state.activeField;
-  const maxLength = field === "remainder" ? 1 : 2;
+  const maxLength = field === "remainder" ? 1 : level.quotientMaxLength;
 
   if (state.answers[field].length >= maxLength) {
     return;
@@ -279,13 +402,13 @@ function clearActiveField() {
 }
 
 function toggleActiveField() {
-  if (state.selectedMode === "mixed") {
+  if (getCurrentLevel().hasRemainderInput) {
     setActiveField(state.activeField === "quotient" ? "remainder" : "quotient");
   }
 }
 
-elements.modeButtons.forEach((button) => {
-  button.addEventListener("click", () => setSelectedMode(button.dataset.mode));
+elements.levelButtons.forEach((button) => {
+  button.addEventListener("click", () => setSelectedLevel(button.dataset.level));
 });
 
 elements.answerFields.forEach((button) => {
@@ -343,4 +466,4 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-setSelectedMode(state.selectedMode);
+setSelectedLevel(state.selectedLevel);
