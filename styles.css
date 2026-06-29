@@ -21,6 +21,7 @@
 html,
 body {
   min-height: 100%;
+  touch-action: manipulation;
 }
 
 body {
@@ -38,10 +39,14 @@ body {
     "Segoe UI",
     sans-serif;
   letter-spacing: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button {
   font: inherit;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 [hidden] {
@@ -69,14 +74,14 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 28px 28px 22px;
+  padding: 18px 24px 16px;
   border-bottom: 1px solid var(--line);
 }
 
 .eyebrow {
-  margin: 0 0 6px;
+  margin: 0 0 3px;
   color: var(--accent-strong);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0;
 }
@@ -89,7 +94,7 @@ h2 {
 }
 
 h1 {
-  font-size: clamp(1.6rem, 7vw, 2.5rem);
+  font-size: clamp(1.45rem, 5vw, 2.1rem);
 }
 
 h2 {
@@ -98,8 +103,8 @@ h2 {
 
 .header-badge {
   flex: 0 0 auto;
-  min-width: 64px;
-  min-height: 64px;
+  min-width: 52px;
+  min-height: 52px;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -111,7 +116,7 @@ h2 {
 .setup-panel,
 .game-panel,
 .result-panel {
-  padding: 24px 28px 28px;
+  padding: 18px 24px 22px;
 }
 
 .section-heading {
@@ -200,13 +205,13 @@ h2 {
 .game-status {
   display: grid;
   grid-template-columns: 1fr 1fr auto;
-  gap: 10px;
+  gap: 8px;
   align-items: stretch;
 }
 
 .game-status > div,
 .icon-action {
-  min-height: 56px;
+  min-height: 46px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
@@ -215,7 +220,7 @@ h2 {
 .game-status > div {
   display: grid;
   align-content: center;
-  padding: 10px 12px;
+  padding: 6px 10px;
 }
 
 .status-label {
@@ -225,19 +230,19 @@ h2 {
 }
 
 .game-status strong {
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .icon-action {
-  width: 56px;
+  width: 46px;
   color: var(--accent-strong);
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   cursor: pointer;
 }
 
 .progress-track {
-  height: 10px;
-  margin: 16px 0 18px;
+  height: 8px;
+  margin: 12px 0 12px;
   overflow: hidden;
   border-radius: 999px;
   background: #edf1f6;
@@ -255,13 +260,13 @@ h2 {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
-  padding: 22px;
+  padding: 16px;
 }
 
 .mode-label {
-  margin: 0 0 12px;
+  margin: 0 0 6px;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   font-weight: 800;
 }
 
@@ -269,10 +274,10 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(8px, 3vw, 18px);
-  min-height: 104px;
+  gap: clamp(6px, 2.4vw, 14px);
+  min-height: 76px;
   font-variant-numeric: tabular-nums;
-  font-size: clamp(3rem, 14vw, 5.7rem);
+  font-size: clamp(2.45rem, 10vw, 4.5rem);
   font-weight: 950;
   line-height: 1;
 }
@@ -280,8 +285,8 @@ h2 {
 .answer-area {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 8px;
+  gap: 10px;
+  margin-top: 6px;
 }
 
 .answer-area.is-single {
@@ -289,7 +294,7 @@ h2 {
 }
 
 .answer-field {
-  min-height: 82px;
+  min-height: 66px;
   border: 2px solid var(--line);
   border-radius: 8px;
   background: #fff;
@@ -308,22 +313,22 @@ h2 {
 }
 
 .field-label {
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 800;
 }
 
 .field-value {
-  min-height: 36px;
-  font-size: 2rem;
+  min-height: 30px;
+  font-size: 1.65rem;
   font-weight: 950;
   font-variant-numeric: tabular-nums;
 }
 
 .feedback {
-  min-height: 28px;
-  margin: 14px 0 0;
+  min-height: 22px;
+  margin: 8px 0 0;
   color: var(--warning);
   font-weight: 800;
   text-align: center;
@@ -338,19 +343,19 @@ h2 {
   bottom: 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 16px;
+  gap: 8px;
+  margin-top: 10px;
   padding-top: 2px;
   background: var(--panel);
 }
 
 .keypad button {
-  min-height: 58px;
+  min-height: 48px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--key);
   color: var(--ink);
-  font-size: 1.3rem;
+  font-size: 1.12rem;
   font-weight: 900;
   cursor: pointer;
   transition:
@@ -366,7 +371,7 @@ h2 {
 .keypad .utility-key {
   background: #eef2f6;
   color: var(--accent-strong);
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .keypad.is-exact [data-key="0"] {
@@ -433,6 +438,30 @@ h2 {
     padding-right: 18px;
   }
 
+  .app-header {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .header-badge {
+    min-width: 40px;
+    min-height: 40px;
+    font-size: 0.82rem;
+  }
+
+  h1 {
+    font-size: clamp(1.35rem, 6vw, 1.6rem);
+  }
+
+  .game-panel {
+    padding-top: 8px;
+    padding-bottom: 10px;
+  }
+
+  .progress-track {
+    margin: 8px 0;
+  }
+
   .mode-options,
   .answer-area,
   .result-stats {
@@ -444,22 +473,47 @@ h2 {
   }
 
   .game-status {
-    grid-template-columns: 1fr 1fr 48px;
+    grid-template-columns: 1fr 1fr 42px;
   }
 
   .icon-action {
-    width: 48px;
+    width: 42px;
   }
 
   .problem-card {
-    padding: 18px 14px;
+    padding: 10px;
   }
 
   .problem-line {
-    min-height: 92px;
+    min-height: 58px;
+    font-size: clamp(2rem, 10vw, 3.2rem);
+  }
+
+  .answer-field {
+    min-height: 58px;
+  }
+
+  .field-value {
+    min-height: 26px;
+    font-size: 1.45rem;
+  }
+
+  .feedback {
+    min-height: 18px;
+    margin-top: 4px;
+  }
+
+  .keypad {
+    gap: 6px;
+    margin-top: 8px;
   }
 
   .keypad button {
-    min-height: 56px;
+    min-height: 40px;
+    font-size: 1rem;
+  }
+
+  .keypad .utility-key {
+    font-size: 0.82rem;
   }
 }
