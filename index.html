@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
     <title>計算力トレーニング</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="styles.css?v=levels-1">
+    <link rel="stylesheet" href="styles.css?v=controls-1">
   </head>
   <body>
     <main class="app-shell">
@@ -27,26 +27,31 @@
             <button class="mode-card is-active" type="button" role="radio" aria-checked="true" data-level="1">
               <span class="mode-title">レベル1</span>
               <span class="mode-meta">余りなし・36問</span>
+              <span class="mode-target">◎ 30秒 / ○ 50秒</span>
               <span class="mode-copy">1〜2桁 ÷ 2〜9。商は1桁。</span>
             </button>
             <button class="mode-card" type="button" role="radio" aria-checked="false" data-level="2">
               <span class="mode-title">レベル2</span>
               <span class="mode-meta">余りあり・18問</span>
+              <span class="mode-target">◎ 30秒 / ○ 55秒</span>
               <span class="mode-copy">1〜2桁 ÷ 2〜9。商と余りを入力。</span>
             </button>
             <button class="mode-card" type="button" role="radio" aria-checked="false" data-level="3">
               <span class="mode-title">レベル3</span>
               <span class="mode-meta">余りなし・36問</span>
+              <span class="mode-target">◎ 50秒 / ○ 1分30秒</span>
               <span class="mode-copy">2〜4桁 ÷ 2〜9系の数。商も10倍系。</span>
             </button>
             <button class="mode-card" type="button" role="radio" aria-checked="false" data-level="4">
               <span class="mode-title">レベル4</span>
               <span class="mode-meta">余りなし・36問</span>
+              <span class="mode-target">◎ 35秒 / ○ 1分</span>
               <span class="mode-copy">2桁 ÷ 2〜9。割り切れる問題。</span>
             </button>
             <button class="mode-card" type="button" role="radio" aria-checked="false" data-level="5">
               <span class="mode-title">レベル5</span>
               <span class="mode-meta">余りあり・18問</span>
+              <span class="mode-target">◎ 35秒 / ○ 1分</span>
               <span class="mode-copy">2桁 ÷ 2〜9。商と余りを入力。</span>
             </button>
           </div>
@@ -55,6 +60,10 @@
         </section>
 
         <section id="gamePanel" class="game-panel" aria-label="トレーニング" hidden>
+          <div id="countdownOverlay" class="countdown-overlay" aria-live="assertive" hidden>
+            <span id="countdownText">3</span>
+          </div>
+
           <div class="game-status">
             <div>
               <span class="status-label">問題</span>
@@ -64,6 +73,7 @@
               <span class="status-label">タイム</span>
               <strong id="timerText">00:00.0</strong>
             </div>
+            <button id="homeButton" class="icon-action" type="button" aria-label="レベル選択へ戻る" title="レベル選択へ戻る">←</button>
             <button id="restartButton" class="icon-action" type="button" aria-label="やり直す" title="やり直す">↻</button>
           </div>
 
@@ -73,6 +83,7 @@
 
           <div class="problem-card">
             <p id="modeLabel" class="mode-label">余りなし</p>
+            <p id="targetText" class="target-text">◎ 30秒 / ○ 50秒</p>
             <div class="problem-line" aria-live="polite">
               <span id="dividendText">48</span>
               <span>÷</span>
@@ -106,9 +117,8 @@
             <button type="button" data-key="3">3</button>
             <button class="utility-key" type="button" data-action="backspace" aria-label="一文字消す">⌫</button>
             <button type="button" data-key="0">0</button>
-            <button id="nextFieldButton" class="utility-key" type="button" data-action="next" aria-label="入力欄を切り替える">→</button>
-            <button class="utility-key" type="button" data-action="clear">クリア</button>
-            <button class="submit-key" type="button" data-action="submit">答える</button>
+            <button id="submitButton" class="submit-key" type="button" data-action="submit">答える</button>
+            <button id="clearButton" class="utility-key clear-key" type="button" data-action="clear">クリア</button>
           </div>
         </section>
 
@@ -137,6 +147,6 @@
       </section>
     </main>
 
-    <script src="app.js?v=levels-1"></script>
+    <script src="app.js?v=controls-1"></script>
   </body>
 </html>

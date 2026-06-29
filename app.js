@@ -1,5 +1,7 @@
 const MIN_DIVISOR = 2;
 const MAX_DIVISOR = 9;
+const COUNTDOWN_VALUES = ["3", "2", "1", "スタート"];
+const COUNTDOWN_STEP_MS = 800;
 
 const levels = {
   1: {
@@ -66,18 +68,24 @@ const state = {
   mistakes: 0,
   startedAt: 0,
   timerId: null,
+  countdownTimerIds: [],
+  isCountingDown: false,
 };
 
 const elements = {
   setupPanel: document.querySelector("#setupPanel"),
   gamePanel: document.querySelector("#gamePanel"),
   resultPanel: document.querySelector("#resultPanel"),
+  countdownOverlay: document.querySelector("#countdownOverlay"),
+  countdownText: document.querySelector("#countdownText"),
   startButton: document.querySelector("#startButton"),
+  homeButton: document.querySelector("#homeButton"),
   restartButton: document.querySelector("#restartButton"),
   retryButton: document.querySelector("#retryButton"),
   backToSetupButton: document.querySelector("#backToSetupButton"),
   levelButtons: [...document.querySelectorAll("[data-level]")],
   modeLabel: document.querySelector("#modeLabel"),
+  targetText: document.querySelector("#targetText"),
   progressText: document.querySelector("#progressText"),
   timerText: document.querySelector("#timerText"),
   progressFill: document.querySelector("#progressFill"),
@@ -90,7 +98,8 @@ const elements = {
   answerFields: [...document.querySelectorAll("[data-field]")],
   feedbackText: document.querySelector("#feedbackText"),
   keypad: document.querySelector(".keypad"),
-  nextFieldButton: document.querySelector("#nextFieldButton"),
+  submitButton: document.querySelector("#submitButton"),
+  clearButton: document.querySelector("#clearButton"),
   resultTitle: document.querySelector("#resultTitle"),
   gradeText: document.querySelector("#gradeText"),
   gradeLabel: document.querySelector("#gradeLabel"),
@@ -205,6 +214,22 @@ function formatTime(milliseconds) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}.${tenths}`;
 }
 
+function formatTargetTime(milliseconds) {
+  const totalSeconds = Math.floor(milliseconds / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  if (minutes === 0) {
+    return `${seconds}秒`;
+  }
+
+  if (seconds === 0) {
+    return `${minutes}分`;
+  }
+
+  return `${minutes}分${seconds}秒`;
+}
+
 function updateTimer() {
   elements.timerText.textContent = formatTime(Date.now() - state.startedAt);
 }
@@ -221,6 +246,41 @@ function stopTimer() {
     window.clearInterval(state.timerId);
     state.timerId = null;
   }
+}
+
+function clearCountdown() {
+  state.countdownTimerIds.forEach((timerId) => window.clearTimeout(timerId));
+  state.countdownTimerIds = [];
+  state.isCountingDown = false;
+  elements.countdownOverlay.hidden = true;
+  elements.gamePanel.classList.remove("is-counting-down");
+}
+
+function startCountdown() {
+  clearCountdown();
+  state.isCountingDown = true;
+  elements.countdownText.textContent = COUNTDOWN_VALUES[0];
+  elements.countdownOverlay.hidden = false;
+  elements.gamePanel.classList.add("is-counting-down");
+  elements.timerText.textContent = "00:00.0";
+
+  COUNTDOWN_VALUES.slice(1).forEach((value, index) => {
+    const timerId = window.setTimeout(() => {
+      elements.countdownText.textContent = value;
+    }, COUNTDOWN_STEP_MS * (index + 1));
+
+    state.countdownTimerIds.push(timerId);
+  });
+
+  const startTimerId = window.setTimeout(() => {
+    state.countdownTimerIds = [];
+    state.isCountingDown = false;
+    elements.countdownOverlay.hidden = true;
+    elements.gamePanel.classList.remove("is-counting-down");
+    startTimer();
+  }, COUNTDOWN_STEP_MS * COUNTDOWN_VALUES.length);
+
+  state.countdownTimerIds.push(startTimerId);
 }
 
 function getCurrentLevel() {
@@ -247,6 +307,8 @@ function setActiveField(field) {
   elements.answerFields.forEach((button) => {
     button.classList.toggle("is-active", button.dataset.field === state.activeField);
   });
+
+  updateActionButtons();
 }
 
 function resetAnswer() {
@@ -267,6 +329,7 @@ function renderQuestion() {
   const answeredCount = state.currentIndex;
 
   elements.modeLabel.textContent = level.label;
+  elements.targetText.textContent = `◎ ${formatTargetTime(level.goldMs)} / ○ ${formatTargetTime(level.silverMs)}`;
   elements.dividendText.textContent = question.dividend;
   elements.divisorText.textContent = question.divisor;
   elements.progressText.textContent = `${state.currentIndex + 1} / ${level.questionCount}`;
@@ -274,8 +337,6 @@ function renderQuestion() {
   elements.remainderField.hidden = !level.hasRemainderInput;
   elements.answerArea.classList.toggle("is-single", !level.hasRemainderInput);
   elements.keypad.classList.toggle("is-exact", !level.hasRemainderInput);
-  elements.nextFieldButton.disabled = !level.hasRemainderInput;
-  elements.nextFieldButton.hidden = !level.hasRemainderInput;
   elements.feedbackText.textContent = "";
   elements.feedbackText.classList.remove("is-correct");
   resetAnswer();
@@ -290,12 +351,14 @@ function showPanel(panel) {
 function startGame() {
   const level = getCurrentLevel();
 
+  stopTimer();
+  clearCountdown();
   state.questions = generateQuestions(level);
   state.currentIndex = 0;
   state.mistakes = 0;
   showPanel("game");
   renderQuestion();
-  startTimer();
+  startCountdown();
 }
 
 function getNumericAnswer(field) {
@@ -313,6 +376,10 @@ function markWrong(message) {
 }
 
 function submitAnswer() {
+  if (state.isCountingDown) {
+    return;
+  }
+
   const level = getCurrentLevel();
   const question = state.questions[state.currentIndex];
   const quotient = getNumericAnswer("quotient");
@@ -378,6 +445,10 @@ function getGrade(level, elapsed, mistakes) {
 }
 
 function appendDigit(digit) {
+  if (state.isCountingDown) {
+    return;
+  }
+
   const level = getCurrentLevel();
   const field = state.activeField;
   const maxLength = field === "remainder" ? 1 : level.quotientMaxLength;
@@ -391,12 +462,20 @@ function appendDigit(digit) {
 }
 
 function backspace() {
+  if (state.isCountingDown) {
+    return;
+  }
+
   const field = state.activeField;
   state.answers[field] = state.answers[field].slice(0, -1);
   renderAnswer();
 }
 
 function clearActiveField() {
+  if (state.isCountingDown) {
+    return;
+  }
+
   state.answers[state.activeField] = "";
   renderAnswer();
 }
@@ -405,6 +484,66 @@ function toggleActiveField() {
   if (getCurrentLevel().hasRemainderInput) {
     setActiveField(state.activeField === "quotient" ? "remainder" : "quotient");
   }
+}
+
+function updateActionButtons() {
+  const level = getCurrentLevel();
+
+  if (level.hasRemainderInput && state.activeField === "quotient") {
+    elements.submitButton.textContent = "余りに進む";
+    elements.clearButton.textContent = "クリア";
+  } else if (level.hasRemainderInput && state.activeField === "remainder") {
+    elements.submitButton.textContent = "答える";
+    elements.clearButton.textContent = "商に戻る";
+  } else {
+    elements.submitButton.textContent = "答える";
+    elements.clearButton.textContent = "クリア";
+  }
+}
+
+function handleSubmitAction() {
+  const level = getCurrentLevel();
+
+  if (state.isCountingDown) {
+    return;
+  }
+
+  if (level.hasRemainderInput && state.activeField === "quotient") {
+    if (getNumericAnswer("quotient") === null) {
+      markWrong("商を入力してください");
+      return;
+    }
+
+    setActiveField("remainder");
+    elements.feedbackText.textContent = "";
+    elements.feedbackText.classList.remove("is-correct");
+    return;
+  }
+
+  submitAnswer();
+}
+
+function handleClearAction() {
+  const level = getCurrentLevel();
+
+  if (state.isCountingDown) {
+    return;
+  }
+
+  if (level.hasRemainderInput && state.activeField === "remainder") {
+    setActiveField("quotient");
+    elements.feedbackText.textContent = "";
+    elements.feedbackText.classList.remove("is-correct");
+    return;
+  }
+
+  clearActiveField();
+}
+
+function backToSetup() {
+  stopTimer();
+  clearCountdown();
+  showPanel("setup");
 }
 
 elements.levelButtons.forEach((button) => {
@@ -416,13 +555,11 @@ elements.answerFields.forEach((button) => {
 });
 
 elements.startButton.addEventListener("click", startGame);
+elements.homeButton.addEventListener("click", backToSetup);
 elements.restartButton.addEventListener("click", startGame);
 elements.retryButton.addEventListener("click", startGame);
 
-elements.backToSetupButton.addEventListener("click", () => {
-  stopTimer();
-  showPanel("setup");
-});
+elements.backToSetupButton.addEventListener("click", backToSetup);
 
 elements.keypad.addEventListener("click", (event) => {
   const button = event.target.closest("button");
@@ -439,11 +576,11 @@ elements.keypad.addEventListener("click", (event) => {
   if (button.dataset.action === "backspace") {
     backspace();
   } else if (button.dataset.action === "clear") {
-    clearActiveField();
+    handleClearAction();
   } else if (button.dataset.action === "next") {
     toggleActiveField();
   } else if (button.dataset.action === "submit") {
-    submitAnswer();
+    handleSubmitAction();
   }
 });
 
@@ -457,12 +594,12 @@ document.addEventListener("keydown", (event) => {
   } else if (event.key === "Backspace") {
     backspace();
   } else if (event.key === "Enter") {
-    submitAnswer();
+    handleSubmitAction();
   } else if (event.key === "Tab" || event.key === "ArrowRight" || event.key === "ArrowLeft") {
     event.preventDefault();
     toggleActiveField();
   } else if (event.key === "Escape" || event.key === "Delete") {
-    clearActiveField();
+    handleClearAction();
   }
 });
 
