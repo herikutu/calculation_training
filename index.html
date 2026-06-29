@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>計算力トレーニング</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="training-panel" aria-labelledby="app-title">
+        <header class="app-header">
+          <div>
+            <p class="eyebrow">2桁 ÷ 2〜9</p>
+            <h1 id="app-title">計算力トレーニング</h1>
+          </div>
+          <div class="header-badge" aria-label="20問のトレーニング">20問</div>
+        </header>
+
+        <section id="setupPanel" class="setup-panel" aria-label="出題設定">
+          <div class="section-heading">
+            <h2>出題パターン</h2>
+          </div>
+
+          <div class="mode-options" role="radiogroup" aria-label="出題パターン">
+            <button class="mode-card is-active" type="button" role="radio" aria-checked="true" data-mode="exact">
+              <span class="mode-title">余りなし</span>
+              <span class="mode-copy">割り切れる問題だけ。答えは商のみ。</span>
+            </button>
+            <button class="mode-card" type="button" role="radio" aria-checked="false" data-mode="mixed">
+              <span class="mode-title">余りありかも</span>
+              <span class="mode-copy">商と余りを入力。余りなしは 0。</span>
+            </button>
+          </div>
+
+          <button id="startButton" class="primary-action" type="button">スタート</button>
+        </section>
+
+        <section id="gamePanel" class="game-panel" aria-label="トレーニング" hidden>
+          <div class="game-status">
+            <div>
+              <span class="status-label">問題</span>
+              <strong id="progressText">1 / 20</strong>
+            </div>
+            <div>
+              <span class="status-label">タイム</span>
+              <strong id="timerText">00:00.0</strong>
+            </div>
+            <button id="restartButton" class="icon-action" type="button" aria-label="やり直す" title="やり直す">↻</button>
+          </div>
+
+          <div class="progress-track" aria-hidden="true">
+            <div id="progressFill" class="progress-fill"></div>
+          </div>
+
+          <div class="problem-card">
+            <p id="modeLabel" class="mode-label">余りなし</p>
+            <div class="problem-line" aria-live="polite">
+              <span id="dividendText">48</span>
+              <span>÷</span>
+              <span id="divisorText">6</span>
+              <span>=</span>
+            </div>
+
+            <div class="answer-area" aria-label="答え入力">
+              <button class="answer-field is-active" type="button" data-field="quotient" aria-label="商を入力">
+                <span class="field-label">商</span>
+                <span id="quotientValue" class="field-value">_</span>
+              </button>
+              <button id="remainderField" class="answer-field" type="button" data-field="remainder" aria-label="余りを入力" hidden>
+                <span class="field-label">余り</span>
+                <span id="remainderValue" class="field-value">_</span>
+              </button>
+            </div>
+
+            <p id="feedbackText" class="feedback" aria-live="assertive"></p>
+          </div>
+
+          <div class="keypad" aria-label="数字入力キーボード">
+            <button type="button" data-key="7">7</button>
+            <button type="button" data-key="8">8</button>
+            <button type="button" data-key="9">9</button>
+            <button type="button" data-key="4">4</button>
+            <button type="button" data-key="5">5</button>
+            <button type="button" data-key="6">6</button>
+            <button type="button" data-key="1">1</button>
+            <button type="button" data-key="2">2</button>
+            <button type="button" data-key="3">3</button>
+            <button class="utility-key" type="button" data-action="backspace" aria-label="一文字消す">⌫</button>
+            <button type="button" data-key="0">0</button>
+            <button id="nextFieldButton" class="utility-key" type="button" data-action="next" aria-label="入力欄を切り替える">→</button>
+            <button class="utility-key" type="button" data-action="clear">クリア</button>
+            <button class="submit-key" type="button" data-action="submit">答える</button>
+          </div>
+        </section>
+
+        <section id="resultPanel" class="result-panel" aria-label="結果" hidden>
+          <p class="eyebrow">完了</p>
+          <h2>20問すべて正解</h2>
+          <dl class="result-stats">
+            <div>
+              <dt>タイム</dt>
+              <dd id="finalTimeText">00:00.0</dd>
+            </div>
+            <div>
+              <dt>まちがい</dt>
+              <dd id="mistakeText">0回</dd>
+            </div>
+          </dl>
+          <div class="result-actions">
+            <button id="retryButton" class="primary-action" type="button">同じパターンでもう一度</button>
+            <button id="backToSetupButton" class="secondary-action" type="button">パターンを選び直す</button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
