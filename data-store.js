@@ -4,6 +4,7 @@
   const RESULTS_KEY = "calculation-training-results";
   const LOCAL_RESULT_LIMIT = 240;
   const RANKING_LIMIT = 10;
+  const RANKING_FETCH_LIMIT = 80;
 
   const state = {
     initPromise: null,
@@ -151,6 +152,39 @@
     return `rankings_level_${levelId}`;
   }
 
+  function rankingValue(item, key) {
+    const value = Number(item[key]);
+    return Number.isFinite(value) ? value : Number.MAX_SAFE_INTEGER;
+  }
+
+  function compareRanking(a, b) {
+    return (
+      rankingValue(a, "rankSort") - rankingValue(b, "rankSort") ||
+      rankingValue(a, "mistakes") - rankingValue(b, "mistakes") ||
+      rankingValue(a, "elapsedMs") - rankingValue(b, "elapsedMs")
+    );
+  }
+
+  function bestRankingItems(items) {
+    const bestByNickname = new Map();
+
+    items.forEach((item) => {
+      const key = nicknameKey(item.nickname);
+
+      if (!key) {
+        return;
+      }
+
+      const current = bestByNickname.get(key);
+
+      if (!current || compareRanking(item, current) < 0) {
+        bestByNickname.set(key, item);
+      }
+    });
+
+    return [...bestByNickname.values()].sort(compareRanking).slice(0, RANKING_LIMIT);
+  }
+
   async function initRemote() {
     if (state.initPromise) {
       return state.initPromise;
@@ -250,10 +284,9 @@
   }
 
   function localRankings(levelId) {
-    return getLocalResults()
-      .filter((result) => !result.isWeaknessMode && result.levelId === String(levelId))
-      .sort((a, b) => a.rankSort - b.rankSort || new Date(b.createdAt) - new Date(a.createdAt))
-      .slice(0, RANKING_LIMIT);
+    return bestRankingItems(
+      getLocalResults().filter((result) => !result.isWeaknessMode && result.levelId === String(levelId)),
+    );
   }
 
   async function loadRankings(levelId) {
@@ -268,12 +301,12 @@
         remote.query(
           remote.collection(remote.db, rankingCollection(levelId)),
           remote.orderBy("rankSort", "asc"),
-          remote.limit(RANKING_LIMIT),
+          remote.limit(RANKING_FETCH_LIMIT),
         ),
       );
       const items = [];
       snapshot.forEach((doc) => items.push({ id: doc.id, ...doc.data() }));
-      return { source: "firebase", items };
+      return { source: "firebase", items: bestRankingItems(items) };
     } catch (error) {
       return { source: "local", items: localRankings(levelId) };
     }
