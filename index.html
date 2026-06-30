@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
     <title>計算力トレーニング</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="styles.css?v=controls-1">
+    <link rel="stylesheet" href="styles.css?v=data-1">
   </head>
   <body>
     <main class="app-shell">
@@ -19,6 +19,12 @@
         </header>
 
         <section id="setupPanel" class="setup-panel" aria-label="出題設定">
+          <div class="player-panel">
+            <label class="input-label" for="nicknameInput">ニックネーム</label>
+            <input id="nicknameInput" class="nickname-input" type="text" maxlength="12" autocomplete="nickname" inputmode="text">
+            <p id="dataStatus" class="data-status">端末内保存</p>
+          </div>
+
           <div class="section-heading">
             <h2>レベル</h2>
           </div>
@@ -57,6 +63,32 @@
           </div>
 
           <button id="startButton" class="primary-action" type="button">スタート</button>
+
+          <div class="data-panel">
+            <div class="data-tabs" role="tablist" aria-label="データ表示">
+              <button id="rankingTab" class="is-active" type="button" role="tab" aria-selected="true" data-data-view="ranking">ランキング</button>
+              <button id="weaknessTab" type="button" role="tab" aria-selected="false" data-data-view="weakness">苦手</button>
+            </div>
+
+            <section id="rankingPanel" class="data-card" aria-label="ランキング">
+              <div class="data-card-heading">
+                <h2 id="rankingTitle">レベル1 ランキング</h2>
+                <button id="refreshDataButton" class="mini-action" type="button">更新</button>
+              </div>
+              <ol id="rankingList" class="ranking-list">
+                <li class="empty-row">まだ記録なし</li>
+              </ol>
+            </section>
+
+            <section id="weaknessPanel" class="data-card" aria-label="苦手" hidden>
+              <div class="data-card-heading">
+                <h2>苦手</h2>
+                <button id="weaknessModeButton" class="mini-action" type="button" disabled>苦手だけ</button>
+              </div>
+              <p id="weaknessSummary" class="data-note">まだ記録なし</p>
+              <ul id="weaknessList" class="weakness-list"></ul>
+            </section>
+          </div>
         </section>
 
         <section id="gamePanel" class="game-panel" aria-label="トレーニング" hidden>
@@ -139,6 +171,7 @@
               <dd id="mistakeText">0回</dd>
             </div>
           </dl>
+          <p id="resultSaveStatus" class="data-status">保存中</p>
           <div class="result-actions">
             <button id="retryButton" class="primary-action" type="button">同じレベルでもう一度</button>
             <button id="backToSetupButton" class="secondary-action" type="button">レベルを選び直す</button>
@@ -147,6 +180,8 @@
       </section>
     </main>
 
-    <script src="app.js?v=controls-1"></script>
+    <script src="firebase-config.js?v=data-1"></script>
+    <script src="data-store.js?v=data-1"></script>
+    <script src="app.js?v=data-1"></script>
   </body>
 </html>

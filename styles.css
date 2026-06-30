@@ -133,6 +133,44 @@ h2 {
   margin-bottom: 14px;
 }
 
+.player-panel {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.input-label {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.nickname-input {
+  width: 100%;
+  min-height: 48px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.nickname-input:focus {
+  border-color: var(--accent);
+  outline: 0;
+}
+
+.data-status,
+.data-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
 .mode-options {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -223,6 +261,121 @@ h2 {
   border: 1px solid var(--line);
   background: #fff;
   color: var(--ink);
+}
+
+.data-panel {
+  margin-top: 18px;
+}
+
+.data-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.data-tabs button,
+.mini-action {
+  min-height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--accent-strong);
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.data-tabs button.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.data-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px;
+}
+
+.data-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.data-card-heading h2 {
+  font-size: 1rem;
+}
+
+.mini-action {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 0.85rem;
+}
+
+.mini-action:disabled {
+  color: #98a2b3;
+  cursor: not-allowed;
+}
+
+.ranking-list,
+.weakness-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ranking-list li,
+.weakness-list li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+  min-height: 38px;
+  border: 1px solid #eef2f6;
+  border-radius: 8px;
+  padding: 7px 9px;
+  background: #fbfcfe;
+  font-weight: 800;
+}
+
+.ranking-list .empty-row,
+.weakness-list .empty-row {
+  grid-template-columns: 1fr;
+  color: var(--muted);
+  text-align: center;
+}
+
+.rank-number {
+  width: 24px;
+  color: var(--accent-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-main,
+.weak-main {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-meta,
+.weak-meta {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.weakness-list {
+  margin-top: 10px;
 }
 
 .game-status {
@@ -555,6 +708,25 @@ h2 {
   .answer-area,
   .result-stats {
     grid-template-columns: 1fr;
+  }
+
+  .player-panel {
+    margin-bottom: 12px;
+  }
+
+  .data-panel {
+    margin-top: 14px;
+  }
+
+  .ranking-list li,
+  .weakness-list li {
+    grid-template-columns: auto 1fr;
+  }
+
+  .rank-meta,
+  .weak-meta {
+    grid-column: 2;
+    text-align: left;
   }
 
   .mode-card {

@@ -1,0 +1,86 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function hasBaseRankingFields() {
+      return request.resource.data.keys().hasOnly([
+        'appVersion',
+        'createdAt',
+        'createdAtLocal',
+        'elapsedMs',
+        'gradeLabel',
+        'gradeSymbol',
+        'levelId',
+        'levelLabel',
+        'mistakes',
+        'nickname',
+        'questionCount',
+        'rankSort',
+        'resultId'
+      ]);
+    }
+
+    function validRanking(levelId) {
+      return hasBaseRankingFields()
+        && request.resource.data.levelId == levelId
+        && request.resource.data.nickname is string
+        && request.resource.data.nickname.size() > 0
+        && request.resource.data.nickname.size() <= 12
+        && request.resource.data.elapsedMs is number
+        && request.resource.data.elapsedMs >= 0
+        && request.resource.data.mistakes is number
+        && request.resource.data.mistakes >= 0
+        && request.resource.data.rankSort is number;
+    }
+
+    function validResult() {
+      return request.resource.data.nickname is string
+        && request.resource.data.nickname.size() > 0
+        && request.resource.data.nickname.size() <= 12
+        && request.resource.data.nicknameKey is string
+        && request.resource.data.elapsedMs is number
+        && request.resource.data.elapsedMs >= 0
+        && request.resource.data.mistakes is number
+        && request.resource.data.mistakes >= 0
+        && request.resource.data.questionCount is number
+        && request.resource.data.questionCount > 0
+        && request.resource.data.questionStats is list
+        && request.resource.data.questionStats.size() <= 40;
+    }
+
+    match /rankings_level_1/{document} {
+      allow read: if true;
+      allow create: if validRanking('1');
+      allow update, delete: if false;
+    }
+
+    match /rankings_level_2/{document} {
+      allow read: if true;
+      allow create: if validRanking('2');
+      allow update, delete: if false;
+    }
+
+    match /rankings_level_3/{document} {
+      allow read: if true;
+      allow create: if validRanking('3');
+      allow update, delete: if false;
+    }
+
+    match /rankings_level_4/{document} {
+      allow read: if true;
+      allow create: if validRanking('4');
+      allow update, delete: if false;
+    }
+
+    match /rankings_level_5/{document} {
+      allow read: if true;
+      allow create: if validRanking('5');
+      allow update, delete: if false;
+    }
+
+    match /trainingResults/{document} {
+      allow create: if validResult();
+      allow read, update, delete: if false;
+    }
+  }
+}
