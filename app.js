@@ -512,6 +512,11 @@ function markWrong(message) {
   elements.feedbackText.classList.remove("is-correct");
 }
 
+function showInputPrompt(message) {
+  elements.feedbackText.textContent = message;
+  elements.feedbackText.classList.remove("is-correct");
+}
+
 function recordQuestionResult(question) {
   const level = getCurrentLevel();
   const elapsedMs = Math.max(0, Date.now() - state.questionStartedAt);
@@ -540,12 +545,12 @@ function submitAnswer() {
   const remainder = level.hasRemainderInput ? getNumericAnswer("remainder") : 0;
 
   if (quotient === null) {
-    markWrong("商を入力してください");
+    showInputPrompt("商を入力してください");
     return;
   }
 
   if (remainder === null) {
-    markWrong("余りを入力してください。余りなしは 0 です");
+    showInputPrompt("余りを入力してください。余りなしは 0 です");
     setActiveField("remainder");
     return;
   }
@@ -703,7 +708,7 @@ function handleSubmitAction() {
 
   if (level.hasRemainderInput && state.activeField === "quotient") {
     if (getNumericAnswer("quotient") === null) {
-      markWrong("商を入力してください");
+      showInputPrompt("商を入力してください");
       return;
     }
 
@@ -803,7 +808,7 @@ function renderWeakness(items) {
   }
 
   elements.weaknessSummary.textContent = `${items.length}件`;
-  const rows = items.slice(0, 5).map((item, index) => {
+  const rows = items.slice(0, 20).map((item, index) => {
     const row = document.createElement("li");
     row.append(
       createListText("rank-number", `${index + 1}`),

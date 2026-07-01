@@ -317,7 +317,7 @@
     const groups = new Map();
 
     getLocalResults()
-      .filter((result) => result.nicknameKey === key && result.levelId === String(levelId))
+      .filter((result) => !result.isWeaknessMode && result.nicknameKey === key && result.levelId === String(levelId))
       .forEach((result) => {
         result.questionStats.forEach((stat) => {
           const item = sanitizeQuestionStat(stat);
