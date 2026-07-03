@@ -1407,7 +1407,14 @@ function renderWeakness(items) {
   elements.weaknessList.replaceChildren(...rows);
 }
 
-async function refreshDataPanels() {
+function refreshWeaknessPanel() {
+  const dataStore = getDataStore();
+  const levelConfig = getSelectedLevel();
+
+  renderWeakness(dataStore ? dataStore.loadWeaknessItems(getNickname(), levelConfig.taskId) : []);
+}
+
+async function refreshDataPanels(options = {}) {
   const dataStore = getDataStore();
   const operation = getSelectedOperation();
   const levelConfig = getSelectedLevel();
@@ -1423,12 +1430,12 @@ async function refreshDataPanels() {
   }
 
   updateDataStatus(dataStore.getStatus().message);
-  renderWeakness(dataStore.loadWeaknessItems(getNickname(), taskId));
+  refreshWeaknessPanel();
   renderEmptyList(elements.rankingList, "読み込み中");
 
   const requestedOperation = state.selectedOperation;
   const requestedLevel = state.selectedLevel;
-  const rankingResult = await dataStore.loadRankings(taskId);
+  const rankingResult = await dataStore.loadRankings(taskId, options);
 
   if (state.selectedOperation !== requestedOperation || state.selectedLevel !== requestedLevel) {
     return;
@@ -1440,7 +1447,7 @@ async function refreshDataPanels() {
 
 function scheduleDataRefresh() {
   window.clearTimeout(state.dataRefreshTimerId);
-  state.dataRefreshTimerId = window.setTimeout(refreshDataPanels, 250);
+  state.dataRefreshTimerId = window.setTimeout(refreshWeaknessPanel, 250);
 }
 
 function initializeData() {
@@ -1454,7 +1461,7 @@ function initializeData() {
   elements.nicknameInput.value = dataStore.getNickname();
   updateDataStatus(dataStore.getStatus().message);
   refreshDataPanels();
-  dataStore.init().then(refreshDataPanels);
+  dataStore.init().then(() => updateDataStatus(dataStore.getStatus().message));
 }
 
 elements.operationTabs.addEventListener("click", (event) => {
@@ -1500,7 +1507,7 @@ elements.nicknameInput.addEventListener("input", () => {
   scheduleDataRefresh();
 });
 
-elements.refreshDataButton.addEventListener("click", refreshDataPanels);
+elements.refreshDataButton.addEventListener("click", () => refreshDataPanels({ force: true }));
 elements.weaknessModeButton.addEventListener("click", startWeaknessGame);
 elements.startButton.addEventListener("click", startGame);
 elements.homeButton.addEventListener("click", backToSetup);

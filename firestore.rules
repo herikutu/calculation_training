@@ -55,6 +55,133 @@ service cloud.firestore {
         && request.resource.data.questionStats.size() <= 40;
     }
 
+    function validRankingBoardTask(boardId, operationId, levelId, taskId) {
+      return (boardId == 'addition_1' && operationId == 'addition' && levelId == '1' && taskId == 'addition:1')
+        || (boardId == 'addition_2' && operationId == 'addition' && levelId == '2' && taskId == 'addition:2')
+        || (boardId == 'addition_3' && operationId == 'addition' && levelId == '3' && taskId == 'addition:3')
+        || (boardId == 'addition_4' && operationId == 'addition' && levelId == '4' && taskId == 'addition:4')
+        || (boardId == 'addition_5' && operationId == 'addition' && levelId == '5' && taskId == 'addition:5')
+        || (boardId == 'addition_6' && operationId == 'addition' && levelId == '6' && taskId == 'addition:6')
+        || (boardId == 'addition_7' && operationId == 'addition' && levelId == '7' && taskId == 'addition:7')
+        || (boardId == 'addition_8' && operationId == 'addition' && levelId == '8' && taskId == 'addition:8')
+        || (boardId == 'addition_9' && operationId == 'addition' && levelId == '9' && taskId == 'addition:9')
+        || (boardId == 'addition_10' && operationId == 'addition' && levelId == '10' && taskId == 'addition:10')
+        || (boardId == 'addition_11' && operationId == 'addition' && levelId == '11' && taskId == 'addition:11')
+        || (boardId == 'subtraction_1' && operationId == 'subtraction' && levelId == '1' && taskId == 'subtraction:1')
+        || (boardId == 'subtraction_2' && operationId == 'subtraction' && levelId == '2' && taskId == 'subtraction:2')
+        || (boardId == 'subtraction_3' && operationId == 'subtraction' && levelId == '3' && taskId == 'subtraction:3')
+        || (boardId == 'subtraction_4' && operationId == 'subtraction' && levelId == '4' && taskId == 'subtraction:4')
+        || (boardId == 'subtraction_5' && operationId == 'subtraction' && levelId == '5' && taskId == 'subtraction:5')
+        || (boardId == 'subtraction_6' && operationId == 'subtraction' && levelId == '6' && taskId == 'subtraction:6')
+        || (boardId == 'subtraction_7' && operationId == 'subtraction' && levelId == '7' && taskId == 'subtraction:7')
+        || (boardId == 'subtraction_8' && operationId == 'subtraction' && levelId == '8' && taskId == 'subtraction:8')
+        || (boardId == 'subtraction_9' && operationId == 'subtraction' && levelId == '9' && taskId == 'subtraction:9')
+        || (boardId == 'subtraction_10' && operationId == 'subtraction' && levelId == '10' && taskId == 'subtraction:10')
+        || (boardId == 'subtraction_11' && operationId == 'subtraction' && levelId == '11' && taskId == 'subtraction:11')
+        || (boardId == 'subtraction_12' && operationId == 'subtraction' && levelId == '12' && taskId == 'subtraction:12')
+        || (boardId == 'multiplication_1' && operationId == 'multiplication' && levelId == '1' && taskId == 'multiplication:1')
+        || (boardId == 'multiplication_2' && operationId == 'multiplication' && levelId == '2' && taskId == 'multiplication:2')
+        || (boardId == 'multiplication_3' && operationId == 'multiplication' && levelId == '3' && taskId == 'multiplication:3')
+        || (boardId == 'multiplication_4' && operationId == 'multiplication' && levelId == '4' && taskId == 'multiplication:4')
+        || (boardId == 'multiplication_5' && operationId == 'multiplication' && levelId == '5' && taskId == 'multiplication:5')
+        || (boardId == 'multiplication_6' && operationId == 'multiplication' && levelId == '6' && taskId == 'multiplication:6')
+        || (boardId == 'multiplication_7' && operationId == 'multiplication' && levelId == '7' && taskId == 'multiplication:7')
+        || (boardId == 'multiplication_8' && operationId == 'multiplication' && levelId == '8' && taskId == 'multiplication:8')
+        || (boardId == 'division_1' && operationId == 'division' && levelId == '1' && taskId == 'division:1')
+        || (boardId == 'division_2' && operationId == 'division' && levelId == '2' && taskId == 'division:2')
+        || (boardId == 'division_3' && operationId == 'division' && levelId == '3' && taskId == 'division:3')
+        || (boardId == 'division_4' && operationId == 'division' && levelId == '4' && taskId == 'division:4')
+        || (boardId == 'division_5' && operationId == 'division' && levelId == '5' && taskId == 'division:5')
+        || (boardId == 'division_6' && operationId == 'division' && levelId == '6' && taskId == 'division:6')
+        || (boardId == 'division_7' && operationId == 'division' && levelId == '7' && taskId == 'division:7')
+        || (boardId == 'division_8' && operationId == 'division' && levelId == '8' && taskId == 'division:8')
+        || (boardId == 'division_9' && operationId == 'division' && levelId == '9' && taskId == 'division:9')
+        || (boardId == 'division_10' && operationId == 'division' && levelId == '10' && taskId == 'division:10');
+    }
+
+    function validRankingBoardItem(item, operationId, levelId, taskId) {
+      return item is map
+        && item.keys().hasOnly([
+          'appVersion',
+          'createdAtLocal',
+          'elapsedMs',
+          'gradeLabel',
+          'gradeSymbol',
+          'levelId',
+          'levelLabel',
+          'mistakes',
+          'nickname',
+          'operationId',
+          'operationLabel',
+          'questionCount',
+          'rankSort',
+          'resultId',
+          'taskId'
+        ])
+        && item.operationId == operationId
+        && item.levelId == levelId
+        && item.taskId == taskId
+        && item.nickname is string
+        && item.nickname.size() > 0
+        && item.nickname.size() <= 12
+        && item.elapsedMs is number
+        && item.elapsedMs >= 0
+        && item.mistakes is number
+        && item.mistakes >= 0
+        && item.rankSort is number
+        && item.questionCount is number
+        && item.questionCount > 0;
+    }
+
+    function validRankingBoardItems(operationId, levelId, taskId) {
+      return request.resource.data.items is list
+        && request.resource.data.items.size() > 0
+        && request.resource.data.items.size() <= 10
+        && validRankingBoardItem(request.resource.data.items[0], operationId, levelId, taskId)
+        && (request.resource.data.items.size() < 2 || validRankingBoardItem(request.resource.data.items[1], operationId, levelId, taskId))
+        && (request.resource.data.items.size() < 3 || validRankingBoardItem(request.resource.data.items[2], operationId, levelId, taskId))
+        && (request.resource.data.items.size() < 4 || validRankingBoardItem(request.resource.data.items[3], operationId, levelId, taskId))
+        && (request.resource.data.items.size() < 5 || validRankingBoardItem(request.resource.data.items[4], operationId, levelId, taskId))
+        && (request.resource.data.items.size() < 6 || validRankingBoardItem(request.resource.data.items[5], operationId, levelId, taskId))
+        && (request.resource.data.items.size() < 7 || validRankingBoardItem(request.resource.data.items[6], operationId, levelId, taskId))
+        && (request.resource.data.items.size() < 8 || validRankingBoardItem(request.resource.data.items[7], operationId, levelId, taskId))
+        && (request.resource.data.items.size() < 9 || validRankingBoardItem(request.resource.data.items[8], operationId, levelId, taskId))
+        && (request.resource.data.items.size() < 10 || validRankingBoardItem(request.resource.data.items[9], operationId, levelId, taskId));
+    }
+
+    function validRankingBoard(boardId) {
+      return request.resource.data.keys().hasOnly([
+          'appVersion',
+          'items',
+          'levelId',
+          'levelLabel',
+          'operationId',
+          'operationLabel',
+          'taskId',
+          'updatedAt',
+          'updatedAtLocal'
+        ])
+        && validRankingBoardTask(
+          boardId,
+          request.resource.data.operationId,
+          request.resource.data.levelId,
+          request.resource.data.taskId
+        )
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.updatedAtLocal is string
+        && validRankingBoardItems(
+          request.resource.data.operationId,
+          request.resource.data.levelId,
+          request.resource.data.taskId
+        );
+    }
+
+    match /rankingBoards/{boardId} {
+      allow read: if true;
+      allow create, update: if validRankingBoard(boardId);
+      allow delete: if false;
+    }
+
     match /rankings_addition_1/{document} {
       allow read: if true;
       allow create: if validRanking('addition', '1', 'addition:1');
