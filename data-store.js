@@ -97,11 +97,98 @@
     return Number.isFinite(number) ? number : fallback;
   }
 
-  function sanitizeQuestionStat(stat) {
+  function normalizeOperationId(value) {
+    const operationId = String(value || "");
+
+    if (["addition", "subtraction", "multiplication", "division"].includes(operationId)) {
+      return operationId;
+    }
+
+    return "division";
+  }
+
+  function createTaskId(operationId, levelId) {
+    return `${normalizeOperationId(operationId)}:${String(levelId || "")}`;
+  }
+
+  function normalizeTaskId(value) {
+    const taskId = String(value || "");
+
+    if (taskId.includes(":")) {
+      return taskId;
+    }
+
+    return createTaskId("division", taskId);
+  }
+
+  function taskParts(taskId) {
+    const [operationId, levelId] = normalizeTaskId(taskId).split(":");
+    return {
+      operationId: normalizeOperationId(operationId),
+      levelId: String(levelId || ""),
+    };
+  }
+
+  function resultTaskId(result) {
+    return normalizeTaskId(result.taskId || createTaskId(result.operationId || "division", result.levelId));
+  }
+
+  function sanitizeAnswerField(field) {
+    return {
+      id: String(field.id || "answer"),
+      label: String(field.label || "答え"),
+      value: sanitizeNumber(field.value),
+      maxLength: sanitizeNumber(field.maxLength, 4),
+    };
+  }
+
+  function legacyDivisionAnswers(stat, levelId) {
+    if (!stat.dividend || !stat.divisor) {
+      return [];
+    }
+
+    const answers = [
+      {
+        id: "quotient",
+        label: "商",
+        value: sanitizeNumber(stat.quotient),
+        maxLength: 4,
+      },
+    ];
+    const remainderLevelIds = ["2", "5", "8", "9", "10"];
+
+    if (remainderLevelIds.includes(String(levelId)) || sanitizeNumber(stat.remainder) > 0) {
+      answers.push({
+        id: "remainder",
+        label: "余り",
+        value: sanitizeNumber(stat.remainder),
+        maxLength: 4,
+      });
+    }
+
+    return answers;
+  }
+
+  function sanitizeQuestionStat(stat, sourceResult = {}) {
+    const parsedTask = taskParts(stat.taskId || sourceResult.taskId || "");
+    const levelId = String(stat.levelId || sourceResult.levelId || parsedTask.levelId || "");
+    const operationId = normalizeOperationId(stat.operationId || sourceResult.operationId || parsedTask.operationId);
+    const taskId = normalizeTaskId(stat.taskId || sourceResult.taskId || createTaskId(operationId, levelId));
+    const answers = Array.isArray(stat.answers)
+      ? stat.answers.slice(0, 4).map(sanitizeAnswerField)
+      : legacyDivisionAnswers(stat, levelId);
+
     return {
       key: String(stat.key || ""),
       display: String(stat.display || ""),
-      levelId: String(stat.levelId || ""),
+      connector: String(stat.connector || "="),
+      operationId,
+      taskId,
+      levelId,
+      left: sanitizeNumber(stat.left),
+      right: sanitizeNumber(stat.right),
+      operator: String(stat.operator || (operationId === "division" ? "÷" : "")),
+      answers,
       dividend: sanitizeNumber(stat.dividend),
       divisor: sanitizeNumber(stat.divisor),
       quotient: sanitizeNumber(stat.quotient),
@@ -116,15 +203,21 @@
     const elapsedMs = sanitizeNumber(rawResult.elapsedMs);
     const mistakes = sanitizeNumber(rawResult.mistakes);
     const isWeaknessMode = Boolean(rawResult.isWeaknessMode);
-    const levelId = String(rawResult.levelId || "");
+    const parsedTask = taskParts(rawResult.taskId || "");
+    const operationId = normalizeOperationId(rawResult.operationId || parsedTask.operationId);
+    const levelId = String(rawResult.levelId || parsedTask.levelId || "");
+    const taskId = normalizeTaskId(rawResult.taskId || createTaskId(operationId, levelId));
     const questionStats = Array.isArray(rawResult.questionStats)
-      ? rawResult.questionStats.slice(0, 40).map(sanitizeQuestionStat)
+      ? rawResult.questionStats.slice(0, 40).map((stat) => sanitizeQuestionStat(stat, rawResult))
       : [];
 
     return {
       id: rawResult.id || createId(),
       nickname,
       nicknameKey: nicknameKey(nickname),
+      operationId,
+      operationLabel: String(rawResult.operationLabel || ""),
+      taskId,
       levelId,
       levelLabel: String(rawResult.levelLabel || ""),
       isWeaknessMode,
@@ -136,7 +229,7 @@
       gradeLabel: String(rawResult.gradeLabel || ""),
       questionStats,
       createdAt: rawResult.createdAt || new Date().toISOString(),
-      appVersion: "data-1",
+      appVersion: "ops-1",
     };
   }
 
@@ -148,8 +241,22 @@
     return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   }
 
-  function rankingCollection(levelId) {
+  function rankingCollection(taskId) {
+    return `rankings_${normalizeTaskId(taskId).replace(":", "_")}`;
+  }
+
+  function legacyRankingCollection(levelId) {
     return `rankings_level_${levelId}`;
+  }
+
+  function legacyRankingLevel(taskId) {
+    const parts = taskParts(taskId);
+
+    if (parts.operationId === "division" && ["1", "2", "3", "4", "5"].includes(parts.levelId)) {
+      return parts.levelId;
+    }
+
+    return "";
   }
 
   function rankingValue(item, key) {
@@ -235,6 +342,9 @@
     return {
       resultId: result.id,
       nickname: result.nickname,
+      operationId: result.operationId,
+      operationLabel: result.operationLabel,
+      taskId: result.taskId,
       levelId: result.levelId,
       levelLabel: result.levelLabel,
       elapsedMs: result.elapsedMs,
@@ -270,9 +380,9 @@
     try {
       await remote.addDoc(remote.collection(remote.db, "trainingResults"), createDetailDoc(result, remote.serverTimestamp));
 
-      if (!result.isWeaknessMode && result.levelId) {
+      if (!result.isWeaknessMode && result.taskId) {
         await remote.addDoc(
-          remote.collection(remote.db, rankingCollection(result.levelId)),
+          remote.collection(remote.db, rankingCollection(result.taskId)),
           createRankingDoc(result, remote.serverTimestamp),
         );
       }
@@ -283,44 +393,66 @@
     }
   }
 
-  function localRankings(levelId) {
+  function localRankings(taskId) {
+    const normalizedTaskId = normalizeTaskId(taskId);
+
     return bestRankingItems(
-      getLocalResults().filter((result) => !result.isWeaknessMode && result.levelId === String(levelId)),
+      getLocalResults().filter((result) => !result.isWeaknessMode && resultTaskId(result) === normalizedTaskId),
     );
   }
 
-  async function loadRankings(levelId) {
+  async function loadRankings(taskId) {
+    const normalizedTaskId = normalizeTaskId(taskId);
     const remote = await initRemote();
 
     if (!remote) {
-      return { source: "local", items: localRankings(levelId) };
+      return { source: "local", items: localRankings(normalizedTaskId) };
     }
 
-    try {
-      const snapshot = await remote.getDocs(
-        remote.query(
-          remote.collection(remote.db, rankingCollection(levelId)),
-          remote.orderBy("rankSort", "asc"),
-          remote.limit(RANKING_FETCH_LIMIT),
-        ),
-      );
-      const items = [];
-      snapshot.forEach((doc) => items.push({ id: doc.id, ...doc.data() }));
-      return { source: "firebase", items: bestRankingItems(items) };
-    } catch (error) {
-      return { source: "local", items: localRankings(levelId) };
+    const collections = [rankingCollection(normalizedTaskId)];
+    const legacyLevelId = legacyRankingLevel(normalizedTaskId);
+
+    if (legacyLevelId) {
+      collections.push(legacyRankingCollection(legacyLevelId));
     }
+
+    const items = [];
+    let successfulQueryCount = 0;
+
+    for (const collectionName of collections) {
+      try {
+        const snapshot = await remote.getDocs(
+          remote.query(
+            remote.collection(remote.db, collectionName),
+            remote.orderBy("rankSort", "asc"),
+            remote.limit(RANKING_FETCH_LIMIT),
+          ),
+        );
+        successfulQueryCount += 1;
+
+        snapshot.forEach((doc) => items.push({ id: doc.id, ...doc.data() }));
+      } catch (error) {
+        // A user may not have published the latest Firestore rules yet.
+      }
+    }
+
+    if (successfulQueryCount > 0) {
+      return { source: "firebase", items: bestRankingItems(items) };
+    }
+
+    return { source: "local", items: localRankings(normalizedTaskId) };
   }
 
-  function aggregateWeakness(nickname, levelId) {
+  function aggregateWeakness(nickname, taskId) {
     const key = nicknameKey(nickname);
+    const normalizedTaskId = normalizeTaskId(taskId);
     const groups = new Map();
 
     getLocalResults()
-      .filter((result) => !result.isWeaknessMode && result.nicknameKey === key && result.levelId === String(levelId))
+      .filter((result) => !result.isWeaknessMode && result.nicknameKey === key && resultTaskId(result) === normalizedTaskId)
       .forEach((result) => {
         result.questionStats.forEach((stat) => {
-          const item = sanitizeQuestionStat(stat);
+          const item = sanitizeQuestionStat(stat, result);
           const group = groups.get(item.key) || {
             ...item,
             attempts: 0,

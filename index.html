@@ -5,17 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
     <title>計算力トレーニング</title>
     <link rel="icon" href="data:,">
-    <link rel="stylesheet" href="styles.css?v=data-1">
+    <link rel="stylesheet" href="styles.css?v=ops-1">
   </head>
   <body>
     <main class="app-shell">
       <section class="training-panel" aria-labelledby="app-title">
         <header class="app-header">
           <div>
-            <p class="eyebrow">割り算 5レベル</p>
+            <p id="appEyebrow" class="eyebrow">4演算トレーニング</p>
             <h1 id="app-title">計算力トレーニング</h1>
           </div>
-          <div class="header-badge" aria-label="5段階のトレーニング">Lv</div>
+          <div id="headerBadge" class="header-badge" aria-label="演算">計</div>
         </header>
 
         <section id="setupPanel" class="setup-panel" aria-label="出題設定">
@@ -26,41 +26,16 @@
           </div>
 
           <div class="section-heading">
+            <h2>種目</h2>
+          </div>
+
+          <div id="operationTabs" class="operation-tabs" role="tablist" aria-label="種目"></div>
+
+          <div class="section-heading level-heading">
             <h2>レベル</h2>
           </div>
 
-          <div class="mode-options" role="radiogroup" aria-label="レベル">
-            <button class="mode-card is-active" type="button" role="radio" aria-checked="true" data-level="1">
-              <span class="mode-title">レベル1</span>
-              <span class="mode-meta">余りなし・36問</span>
-              <span class="mode-target">◎ 30秒 / ○ 50秒</span>
-              <span class="mode-copy">1〜2桁 ÷ 2〜9。商は1桁。</span>
-            </button>
-            <button class="mode-card" type="button" role="radio" aria-checked="false" data-level="2">
-              <span class="mode-title">レベル2</span>
-              <span class="mode-meta">余りあり・18問</span>
-              <span class="mode-target">◎ 30秒 / ○ 55秒</span>
-              <span class="mode-copy">1〜2桁 ÷ 2〜9。商と余りを入力。</span>
-            </button>
-            <button class="mode-card" type="button" role="radio" aria-checked="false" data-level="3">
-              <span class="mode-title">レベル3</span>
-              <span class="mode-meta">余りなし・36問</span>
-              <span class="mode-target">◎ 50秒 / ○ 1分30秒</span>
-              <span class="mode-copy">2〜4桁 ÷ 2〜9系の数。商も10倍系。</span>
-            </button>
-            <button class="mode-card" type="button" role="radio" aria-checked="false" data-level="4">
-              <span class="mode-title">レベル4</span>
-              <span class="mode-meta">余りなし・36問</span>
-              <span class="mode-target">◎ 35秒 / ○ 1分</span>
-              <span class="mode-copy">2桁 ÷ 2〜9。割り切れる問題。</span>
-            </button>
-            <button class="mode-card" type="button" role="radio" aria-checked="false" data-level="5">
-              <span class="mode-title">レベル5</span>
-              <span class="mode-meta">余りあり・18問</span>
-              <span class="mode-target">◎ 35秒 / ○ 1分</span>
-              <span class="mode-copy">2桁 ÷ 2〜9。商と余りを入力。</span>
-            </button>
-          </div>
+          <div id="levelOptions" class="mode-options" role="radiogroup" aria-label="レベル"></div>
 
           <button id="startButton" class="primary-action" type="button">スタート</button>
 
@@ -117,21 +92,10 @@
             <p id="modeLabel" class="mode-label">余りなし</p>
             <p id="targetText" class="target-text">◎ 30秒 / ○ 50秒</p>
             <div class="problem-line" aria-live="polite">
-              <span id="dividendText">48</span>
-              <span>÷</span>
-              <span id="divisorText">6</span>
-              <span>=</span>
+              <span id="problemExpression">48 ÷ 6 =</span>
             </div>
 
             <div class="answer-area" aria-label="答え入力">
-              <button class="answer-field is-active" type="button" data-field="quotient" aria-label="商を入力">
-                <span class="field-label">商</span>
-                <span id="quotientValue" class="field-value">_</span>
-              </button>
-              <button id="remainderField" class="answer-field" type="button" data-field="remainder" aria-label="余りを入力" hidden>
-                <span class="field-label">余り</span>
-                <span id="remainderValue" class="field-value">_</span>
-              </button>
             </div>
 
             <p id="feedbackText" class="feedback" aria-live="assertive"></p>
@@ -181,7 +145,7 @@
     </main>
 
     <script src="firebase-config.js?v=data-1"></script>
-    <script src="data-store.js?v=weakness-2"></script>
-    <script src="app.js?v=weakness-2"></script>
+    <script src="data-store.js?v=ops-1"></script>
+    <script src="app.js?v=ops-1"></script>
   </body>
 </html>

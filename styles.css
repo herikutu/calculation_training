@@ -133,6 +133,10 @@ h2 {
   margin-bottom: 14px;
 }
 
+.level-heading {
+  margin-top: 16px;
+}
+
 .player-panel {
   display: grid;
   gap: 6px;
@@ -171,6 +175,30 @@ h2 {
   font-weight: 800;
 }
 
+.operation-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.operation-tabs button {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--accent-strong);
+  font-size: 0.95rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.operation-tabs button.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
 .mode-options {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -178,7 +206,7 @@ h2 {
 }
 
 .mode-card {
-  min-height: 116px;
+  min-height: 126px;
   border: 2px solid var(--line);
   border-radius: 8px;
   background: #fff;
@@ -457,12 +485,12 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(6px, 2.4vw, 14px);
   min-height: 76px;
   font-variant-numeric: tabular-nums;
-  font-size: clamp(2.45rem, 10vw, 4.5rem);
+  font-size: clamp(2.1rem, 8.8vw, 4rem);
   font-weight: 950;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .answer-area {
@@ -474,6 +502,10 @@ h2 {
 
 .answer-area.is-single {
   grid-template-columns: 1fr;
+}
+
+.answer-area.is-triple {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .answer-field {
@@ -704,8 +736,16 @@ h2 {
     margin: 8px 0;
   }
 
+  .operation-tabs {
+    gap: 6px;
+  }
+
+  .operation-tabs button {
+    min-height: 40px;
+    font-size: 0.86rem;
+  }
+
   .mode-options,
-  .answer-area,
   .result-stats {
     grid-template-columns: 1fr;
   }
@@ -730,7 +770,7 @@ h2 {
   }
 
   .mode-card {
-    min-height: 86px;
+    min-height: 92px;
     padding: 12px;
   }
 
@@ -748,7 +788,7 @@ h2 {
 
   .problem-line {
     min-height: 58px;
-    font-size: clamp(2rem, 10vw, 3.2rem);
+    font-size: clamp(1.8rem, 8.8vw, 3rem);
   }
 
   .answer-field {

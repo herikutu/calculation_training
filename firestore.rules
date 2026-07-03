@@ -14,15 +14,20 @@ service cloud.firestore {
         'levelLabel',
         'mistakes',
         'nickname',
+        'operationId',
+        'operationLabel',
         'questionCount',
         'rankSort',
-        'resultId'
+        'resultId',
+        'taskId'
       ]);
     }
 
-    function validRanking(levelId) {
+    function validRanking(operationId, levelId, taskId) {
       return hasBaseRankingFields()
+        && request.resource.data.operationId == operationId
         && request.resource.data.levelId == levelId
+        && request.resource.data.taskId == taskId
         && request.resource.data.nickname is string
         && request.resource.data.nickname.size() > 0
         && request.resource.data.nickname.size() <= 12
@@ -38,6 +43,8 @@ service cloud.firestore {
         && request.resource.data.nickname.size() > 0
         && request.resource.data.nickname.size() <= 12
         && request.resource.data.nicknameKey is string
+        && request.resource.data.operationId is string
+        && request.resource.data.taskId is string
         && request.resource.data.elapsedMs is number
         && request.resource.data.elapsedMs >= 0
         && request.resource.data.mistakes is number
@@ -48,34 +55,275 @@ service cloud.firestore {
         && request.resource.data.questionStats.size() <= 40;
     }
 
+    match /rankings_addition_1/{document} {
+      allow read: if true;
+      allow create: if validRanking('addition', '1', 'addition:1');
+      allow update, delete: if false;
+    }
+
+    match /rankings_addition_2/{document} {
+      allow read: if true;
+      allow create: if validRanking('addition', '2', 'addition:2');
+      allow update, delete: if false;
+    }
+
+    match /rankings_addition_3/{document} {
+      allow read: if true;
+      allow create: if validRanking('addition', '3', 'addition:3');
+      allow update, delete: if false;
+    }
+
+    match /rankings_addition_4/{document} {
+      allow read: if true;
+      allow create: if validRanking('addition', '4', 'addition:4');
+      allow update, delete: if false;
+    }
+
+    match /rankings_addition_5/{document} {
+      allow read: if true;
+      allow create: if validRanking('addition', '5', 'addition:5');
+      allow update, delete: if false;
+    }
+
+    match /rankings_addition_6/{document} {
+      allow read: if true;
+      allow create: if validRanking('addition', '6', 'addition:6');
+      allow update, delete: if false;
+    }
+
+    match /rankings_addition_7/{document} {
+      allow read: if true;
+      allow create: if validRanking('addition', '7', 'addition:7');
+      allow update, delete: if false;
+    }
+
+    match /rankings_addition_8/{document} {
+      allow read: if true;
+      allow create: if validRanking('addition', '8', 'addition:8');
+      allow update, delete: if false;
+    }
+
+    match /rankings_addition_9/{document} {
+      allow read: if true;
+      allow create: if validRanking('addition', '9', 'addition:9');
+      allow update, delete: if false;
+    }
+
+    match /rankings_addition_10/{document} {
+      allow read: if true;
+      allow create: if validRanking('addition', '10', 'addition:10');
+      allow update, delete: if false;
+    }
+
+    match /rankings_addition_11/{document} {
+      allow read: if true;
+      allow create: if validRanking('addition', '11', 'addition:11');
+      allow update, delete: if false;
+    }
+
+    match /rankings_subtraction_1/{document} {
+      allow read: if true;
+      allow create: if validRanking('subtraction', '1', 'subtraction:1');
+      allow update, delete: if false;
+    }
+
+    match /rankings_subtraction_2/{document} {
+      allow read: if true;
+      allow create: if validRanking('subtraction', '2', 'subtraction:2');
+      allow update, delete: if false;
+    }
+
+    match /rankings_subtraction_3/{document} {
+      allow read: if true;
+      allow create: if validRanking('subtraction', '3', 'subtraction:3');
+      allow update, delete: if false;
+    }
+
+    match /rankings_subtraction_4/{document} {
+      allow read: if true;
+      allow create: if validRanking('subtraction', '4', 'subtraction:4');
+      allow update, delete: if false;
+    }
+
+    match /rankings_subtraction_5/{document} {
+      allow read: if true;
+      allow create: if validRanking('subtraction', '5', 'subtraction:5');
+      allow update, delete: if false;
+    }
+
+    match /rankings_subtraction_6/{document} {
+      allow read: if true;
+      allow create: if validRanking('subtraction', '6', 'subtraction:6');
+      allow update, delete: if false;
+    }
+
+    match /rankings_subtraction_7/{document} {
+      allow read: if true;
+      allow create: if validRanking('subtraction', '7', 'subtraction:7');
+      allow update, delete: if false;
+    }
+
+    match /rankings_subtraction_8/{document} {
+      allow read: if true;
+      allow create: if validRanking('subtraction', '8', 'subtraction:8');
+      allow update, delete: if false;
+    }
+
+    match /rankings_subtraction_9/{document} {
+      allow read: if true;
+      allow create: if validRanking('subtraction', '9', 'subtraction:9');
+      allow update, delete: if false;
+    }
+
+    match /rankings_subtraction_10/{document} {
+      allow read: if true;
+      allow create: if validRanking('subtraction', '10', 'subtraction:10');
+      allow update, delete: if false;
+    }
+
+    match /rankings_subtraction_11/{document} {
+      allow read: if true;
+      allow create: if validRanking('subtraction', '11', 'subtraction:11');
+      allow update, delete: if false;
+    }
+
+    match /rankings_subtraction_12/{document} {
+      allow read: if true;
+      allow create: if validRanking('subtraction', '12', 'subtraction:12');
+      allow update, delete: if false;
+    }
+
+    match /rankings_multiplication_1/{document} {
+      allow read: if true;
+      allow create: if validRanking('multiplication', '1', 'multiplication:1');
+      allow update, delete: if false;
+    }
+
+    match /rankings_multiplication_2/{document} {
+      allow read: if true;
+      allow create: if validRanking('multiplication', '2', 'multiplication:2');
+      allow update, delete: if false;
+    }
+
+    match /rankings_multiplication_3/{document} {
+      allow read: if true;
+      allow create: if validRanking('multiplication', '3', 'multiplication:3');
+      allow update, delete: if false;
+    }
+
+    match /rankings_multiplication_4/{document} {
+      allow read: if true;
+      allow create: if validRanking('multiplication', '4', 'multiplication:4');
+      allow update, delete: if false;
+    }
+
+    match /rankings_multiplication_5/{document} {
+      allow read: if true;
+      allow create: if validRanking('multiplication', '5', 'multiplication:5');
+      allow update, delete: if false;
+    }
+
+    match /rankings_multiplication_6/{document} {
+      allow read: if true;
+      allow create: if validRanking('multiplication', '6', 'multiplication:6');
+      allow update, delete: if false;
+    }
+
+    match /rankings_multiplication_7/{document} {
+      allow read: if true;
+      allow create: if validRanking('multiplication', '7', 'multiplication:7');
+      allow update, delete: if false;
+    }
+
+    match /rankings_multiplication_8/{document} {
+      allow read: if true;
+      allow create: if validRanking('multiplication', '8', 'multiplication:8');
+      allow update, delete: if false;
+    }
+
+    match /rankings_division_1/{document} {
+      allow read: if true;
+      allow create: if validRanking('division', '1', 'division:1');
+      allow update, delete: if false;
+    }
+
+    match /rankings_division_2/{document} {
+      allow read: if true;
+      allow create: if validRanking('division', '2', 'division:2');
+      allow update, delete: if false;
+    }
+
+    match /rankings_division_3/{document} {
+      allow read: if true;
+      allow create: if validRanking('division', '3', 'division:3');
+      allow update, delete: if false;
+    }
+
+    match /rankings_division_4/{document} {
+      allow read: if true;
+      allow create: if validRanking('division', '4', 'division:4');
+      allow update, delete: if false;
+    }
+
+    match /rankings_division_5/{document} {
+      allow read: if true;
+      allow create: if validRanking('division', '5', 'division:5');
+      allow update, delete: if false;
+    }
+
+    match /rankings_division_6/{document} {
+      allow read: if true;
+      allow create: if validRanking('division', '6', 'division:6');
+      allow update, delete: if false;
+    }
+
+    match /rankings_division_7/{document} {
+      allow read: if true;
+      allow create: if validRanking('division', '7', 'division:7');
+      allow update, delete: if false;
+    }
+
+    match /rankings_division_8/{document} {
+      allow read: if true;
+      allow create: if validRanking('division', '8', 'division:8');
+      allow update, delete: if false;
+    }
+
+    match /rankings_division_9/{document} {
+      allow read: if true;
+      allow create: if validRanking('division', '9', 'division:9');
+      allow update, delete: if false;
+    }
+
+    match /rankings_division_10/{document} {
+      allow read: if true;
+      allow create: if validRanking('division', '10', 'division:10');
+      allow update, delete: if false;
+    }
+
     match /rankings_level_1/{document} {
       allow read: if true;
-      allow create: if validRanking('1');
-      allow update, delete: if false;
+      allow create, update, delete: if false;
     }
 
     match /rankings_level_2/{document} {
       allow read: if true;
-      allow create: if validRanking('2');
-      allow update, delete: if false;
+      allow create, update, delete: if false;
     }
 
     match /rankings_level_3/{document} {
       allow read: if true;
-      allow create: if validRanking('3');
-      allow update, delete: if false;
+      allow create, update, delete: if false;
     }
 
     match /rankings_level_4/{document} {
       allow read: if true;
-      allow create: if validRanking('4');
-      allow update, delete: if false;
+      allow create, update, delete: if false;
     }
 
     match /rankings_level_5/{document} {
       allow read: if true;
-      allow create: if validRanking('5');
-      allow update, delete: if false;
+      allow create, update, delete: if false;
     }
 
     match /trainingResults/{document} {
