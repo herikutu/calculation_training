@@ -469,7 +469,7 @@
 
     const items = await remote.runTransaction(remote.db, async (transaction) => {
       const snapshot = await transaction.get(boardRef);
-      const rawItems = snapshot.exists() ? snapshot.data().items || [] : seedItems;
+      const rawItems = snapshot.exists() ? [...(snapshot.data().items || []), ...seedItems] : seedItems;
       const currentItems = bestRankingItems(sanitizeRankingItems(rawItems, result.taskId));
       const nextItems = bestRankingItems(sanitizeRankingItems([...currentItems, rankingItem], result.taskId));
 
@@ -579,10 +579,12 @@
       return { source: "local", items: localRankings(normalizedTaskId) };
     }
 
-    try {
-      const boardResult = await loadRankingBoard(remote, normalizedTaskId);
+    let boardResult = null;
 
-      if (boardResult) {
+    try {
+      boardResult = await loadRankingBoard(remote, normalizedTaskId);
+
+      if (boardResult && boardResult.items.length >= RANKING_LIMIT) {
         writeRankingCache(normalizedTaskId, boardResult);
         return boardResult;
       }
@@ -592,17 +594,19 @@
 
     const primaryCollection = rankingCollection(normalizedTaskId);
     const legacyLevelId = legacyRankingLevel(normalizedTaskId);
-    const items = [];
-    let successfulQueryCount = 0;
+    const items = boardResult ? [...boardResult.items] : [];
+    let successfulQueryCount = boardResult ? 1 : 0;
+    let primaryItems = [];
 
     try {
-      items.push(...(await loadRankingCollection(remote, primaryCollection)));
+      primaryItems = await loadRankingCollection(remote, primaryCollection);
+      items.push(...primaryItems);
       successfulQueryCount += 1;
     } catch (error) {
       // A user may not have published the latest Firestore rules yet.
     }
 
-    if (items.length === 0 && legacyLevelId) {
+    if (primaryItems.length === 0 && legacyLevelId) {
       try {
         items.push(...(await loadRankingCollection(remote, legacyRankingCollection(legacyLevelId))));
         successfulQueryCount += 1;
