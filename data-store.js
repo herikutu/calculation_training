@@ -5,6 +5,7 @@
   const LOCAL_RESULT_LIMIT = 240;
   const RANKING_LIMIT = 10;
   const RANKING_FETCH_LIMIT = 20;
+  const RANKING_BACKFILL_FETCH_LIMIT = 120;
   const RANKING_CACHE_MS = 5 * 60 * 1000;
   const RANKING_BOARD_COLLECTION = "rankingBoards";
 
@@ -514,12 +515,12 @@
     );
   }
 
-  async function loadRankingCollection(remote, collectionName) {
+  async function loadRankingCollection(remote, collectionName, limitSize = RANKING_FETCH_LIMIT) {
     const snapshot = await remote.getDocs(
       remote.query(
         remote.collection(remote.db, collectionName),
         remote.orderBy("rankSort", "asc"),
-        remote.limit(RANKING_FETCH_LIMIT),
+        remote.limit(limitSize),
       ),
     );
     const items = [];
@@ -599,7 +600,7 @@
     let primaryItems = [];
 
     try {
-      primaryItems = await loadRankingCollection(remote, primaryCollection);
+      primaryItems = await loadRankingCollection(remote, primaryCollection, RANKING_BACKFILL_FETCH_LIMIT);
       items.push(...primaryItems);
       successfulQueryCount += 1;
     } catch (error) {
@@ -608,7 +609,7 @@
 
     if (primaryItems.length === 0 && legacyLevelId) {
       try {
-        items.push(...(await loadRankingCollection(remote, legacyRankingCollection(legacyLevelId))));
+        items.push(...(await loadRankingCollection(remote, legacyRankingCollection(legacyLevelId), RANKING_BACKFILL_FETCH_LIMIT)));
         successfulQueryCount += 1;
       } catch (error) {
         // Old ranking collections are optional and only used as an empty-state fallback.
