@@ -2,6 +2,7 @@
   const FIREBASE_SDK_VERSION = "10.12.5";
   const NICKNAME_KEY = "calculation-training-nickname";
   const RESULTS_KEY = "calculation-training-results";
+  const RANKING_SYNCED_KEY = "calculation-training-ranking-synced";
   const LOCAL_RESULT_LIMIT = 240;
   const RANKING_LIMIT = 10;
   const RANKING_FETCH_LIMIT = 20;
@@ -95,6 +96,26 @@
     const results = getLocalResults();
     const nextResults = [result, ...results.filter((item) => item.id !== result.id)].slice(0, LOCAL_RESULT_LIMIT);
     writeJson(RESULTS_KEY, nextResults);
+  }
+
+  function isRankingSynced(resultId) {
+    const syncedIds = readJson(RANKING_SYNCED_KEY, []);
+    return Array.isArray(syncedIds) && syncedIds.includes(String(resultId || ""));
+  }
+
+  function markRankingSynced(resultId) {
+    const normalizedId = String(resultId || "");
+
+    if (!normalizedId) {
+      return;
+    }
+
+    const syncedIds = readJson(RANKING_SYNCED_KEY, []);
+    const nextIds = [normalizedId, ...(Array.isArray(syncedIds) ? syncedIds : []).filter((id) => id !== normalizedId)].slice(
+      0,
+      LOCAL_RESULT_LIMIT,
+    );
+    writeJson(RANKING_SYNCED_KEY, nextIds);
   }
 
   function sanitizeNumber(value, fallback = 0) {
@@ -234,7 +255,7 @@
       gradeLabel: String(rawResult.gradeLabel || ""),
       questionStats,
       createdAt: rawResult.createdAt || new Date().toISOString(),
-      appVersion: "ops-1",
+      appVersion: "ops-2",
     };
   }
 
@@ -448,6 +469,13 @@
     };
   }
 
+  function createRankingDoc(result, serverTimestamp) {
+    return {
+      ...createRankingItem(result),
+      createdAt: serverTimestamp(),
+    };
+  }
+
   function createDetailDoc(result, serverTimestamp) {
     return {
       ...result,
@@ -462,6 +490,50 @@
       .filter((item) => item.nickname && resultTaskId(item) === normalizeTaskId(taskId));
   }
 
+  function invalidateRankingCache(taskId) {
+    const cacheKey = rankingCacheKey(taskId);
+    state.rankingCache.delete(cacheKey);
+    state.rankingRequests.delete(cacheKey);
+  }
+
+  async function saveRankingRecord(remote, result) {
+    await remote.addDoc(
+      remote.collection(remote.db, rankingCollection(result.taskId)),
+      createRankingDoc(result, remote.serverTimestamp),
+    );
+  }
+
+  async function syncBestLocalRanking(remote, taskId) {
+    const normalizedTaskId = normalizeTaskId(taskId);
+    const currentNicknameKey = nicknameKey(getNickname());
+
+    if (!currentNicknameKey) {
+      return;
+    }
+
+    const bestLocalResult = bestRankingItems(
+      getLocalResults().filter(
+        (result) =>
+          !result.isWeaknessMode &&
+          result.nicknameKey === currentNicknameKey &&
+          resultTaskId(result) === normalizedTaskId,
+      ),
+    )[0];
+
+    if (!bestLocalResult || isRankingSynced(bestLocalResult.id)) {
+      return;
+    }
+
+    try {
+      const normalizedResult = createResult(bestLocalResult);
+      await saveRankingRecord(remote, normalizedResult);
+      markRankingSynced(normalizedResult.id);
+      invalidateRankingCache(normalizedTaskId);
+    } catch (error) {
+      console.warn("Local ranking recovery failed.", error);
+    }
+  }
+
   async function updateRankingBoard(remote, result) {
     const boardRef = rankingBoardRef(remote, result.taskId);
     const cachedRanking = readRankingCache(result.taskId);
@@ -470,7 +542,7 @@
 
     const items = await remote.runTransaction(remote.db, async (transaction) => {
       const snapshot = await transaction.get(boardRef);
-      const rawItems = snapshot.exists() ? [...(snapshot.data().items || []), ...seedItems] : seedItems;
+      const rawItems = snapshot.exists() ? snapshot.data().items || [] : seedItems;
       const currentItems = bestRankingItems(sanitizeRankingItems(rawItems, result.taskId));
       const nextItems = bestRankingItems(sanitizeRankingItems([...currentItems, rankingItem], result.taskId));
 
@@ -481,7 +553,8 @@
       return nextItems;
     });
 
-    writeRankingCache(result.taskId, { source: "firebase", items });
+    invalidateRankingCache(result.taskId);
+    return items;
   }
 
   async function saveResult(rawResult) {
@@ -496,15 +569,41 @@
 
     try {
       await remote.addDoc(remote.collection(remote.db, "trainingResults"), createDetailDoc(result, remote.serverTimestamp));
-
-      if (!result.isWeaknessMode && result.taskId) {
-        await updateRankingBoard(remote, result);
-      }
-
-      return { mode: "firebase", message: "クラウド保存", result };
     } catch (error) {
+      console.error("Cloud result save failed.", error);
       return { mode: "local", message: "端末内保存", result };
     }
+
+    if (result.isWeaknessMode || !result.taskId) {
+      return { mode: "firebase", message: "クラウド保存", result };
+    }
+
+    const [rankingRecordResult, rankingBoardResult] = await Promise.allSettled([
+      saveRankingRecord(remote, result),
+      updateRankingBoard(remote, result),
+    ]);
+    const rankingRecordSaved = rankingRecordResult.status === "fulfilled";
+    const rankingBoardSaved = rankingBoardResult.status === "fulfilled";
+
+    invalidateRankingCache(result.taskId);
+
+    if (rankingRecordSaved) {
+      markRankingSynced(result.id);
+    }
+
+    if (!rankingRecordSaved) {
+      console.warn("Ranking record save failed.", rankingRecordResult.reason);
+    }
+
+    if (!rankingBoardSaved) {
+      console.warn("Ranking board update failed.", rankingBoardResult.reason);
+    }
+
+    if (!rankingRecordSaved && !rankingBoardSaved) {
+      return { mode: "firebase", message: "クラウド保存（ランキング未反映）", result };
+    }
+
+    return { mode: "firebase", message: "クラウド保存", result };
   }
 
   function localRankings(taskId) {
@@ -580,15 +679,12 @@
       return { source: "local", items: localRankings(normalizedTaskId) };
     }
 
+    await syncBestLocalRanking(remote, normalizedTaskId);
+
     let boardResult = null;
 
     try {
       boardResult = await loadRankingBoard(remote, normalizedTaskId);
-
-      if (boardResult && boardResult.items.length >= RANKING_LIMIT) {
-        writeRankingCache(normalizedTaskId, boardResult);
-        return boardResult;
-      }
     } catch (error) {
       // Ranking boards are available after the latest Firestore rules are published.
     }
@@ -600,14 +696,14 @@
     let primaryItems = [];
 
     try {
-      primaryItems = await loadRankingCollection(remote, primaryCollection, RANKING_BACKFILL_FETCH_LIMIT);
+      primaryItems = await loadRankingCollection(remote, primaryCollection, RANKING_FETCH_LIMIT);
       items.push(...primaryItems);
       successfulQueryCount += 1;
     } catch (error) {
       // A user may not have published the latest Firestore rules yet.
     }
 
-    if (primaryItems.length === 0 && legacyLevelId) {
+    if (legacyLevelId && bestRankingItems(sanitizeRankingItems(items, normalizedTaskId)).length < RANKING_LIMIT) {
       try {
         items.push(...(await loadRankingCollection(remote, legacyRankingCollection(legacyLevelId), RANKING_BACKFILL_FETCH_LIMIT)));
         successfulQueryCount += 1;
