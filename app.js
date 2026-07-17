@@ -2,6 +2,8 @@ const COUNTDOWN_VALUES = ["3", "2", "1", "スタート"];
 const COUNTDOWN_STEP_MS = 800;
 const WEAKNESS_QUESTION_COUNT = 20;
 const MAX_ANSWER_LENGTH = 4;
+const CORRECT_FEEDBACK_MS = 180;
+const WRONG_FEEDBACK_MS = 480;
 
 const OPERATION_ORDER = ["addition", "subtraction", "multiplication", "division"];
 
@@ -21,6 +23,8 @@ const state = {
   timerId: null,
   countdownTimerIds: [],
   isCountingDown: false,
+  feedbackTimerId: null,
+  isAnswerLocked: false,
   dataView: "ranking",
   weaknessItems: [],
   dataRefreshTimerId: null,
@@ -52,8 +56,6 @@ const elements = {
   answerArea: document.querySelector(".answer-area"),
   feedbackText: document.querySelector("#feedbackText"),
   keypad: document.querySelector(".keypad"),
-  submitButton: document.querySelector("#submitButton"),
-  clearButton: document.querySelector("#clearButton"),
   dataTabs: [...document.querySelectorAll("[data-data-view]")],
   rankingPanel: document.querySelector("#rankingPanel"),
   rankingTitle: document.querySelector("#rankingTitle"),
@@ -859,8 +861,6 @@ function setActiveField(fieldId) {
   elements.answerArea.querySelectorAll("[data-field]").forEach((button) => {
     button.classList.toggle("is-active", button.dataset.field === state.activeField);
   });
-
-  updateActionButtons();
 }
 
 function resetAnswer() {
@@ -955,7 +955,7 @@ function renderQuestion() {
   elements.progressText.textContent = `${state.currentIndex + 1} / ${levelConfig.questionCount}`;
   elements.progressFill.style.width = `${(answeredCount / levelConfig.questionCount) * 100}%`;
   elements.feedbackText.textContent = "";
-  elements.feedbackText.classList.remove("is-correct");
+  elements.feedbackText.classList.remove("is-correct", "is-wrong");
   renderAnswerFields(question);
   resetAnswer();
 }
@@ -969,6 +969,7 @@ function showPanel(panel) {
 function startSession(levelConfig, questions) {
   stopTimer();
   clearCountdown();
+  clearAnswerFeedback();
   state.activeLevel = levelConfig;
   state.questions = questions;
   state.currentIndex = 0;
@@ -1049,24 +1050,12 @@ function startWeaknessGame() {
   startSession(sessionLevel, questions);
 }
 
-function getNumericAnswer(fieldId) {
-  if (state.answers[fieldId] === "") {
-    return null;
-  }
-
-  return Number(state.answers[fieldId]);
-}
-
 function markWrong(message) {
   state.mistakes += 1;
   state.questionMistakes += 1;
   elements.feedbackText.textContent = message;
   elements.feedbackText.classList.remove("is-correct");
-}
-
-function showInputPrompt(message) {
-  elements.feedbackText.textContent = message;
-  elements.feedbackText.classList.remove("is-correct");
+  elements.feedbackText.classList.add("is-wrong");
 }
 
 function recordQuestionResult(question) {
@@ -1093,40 +1082,104 @@ function recordQuestionResult(question) {
   });
 }
 
-function submitAnswer() {
-  if (state.isCountingDown) {
+function clearAnswerFeedback() {
+  if (state.feedbackTimerId) {
+    window.clearTimeout(state.feedbackTimerId);
+    state.feedbackTimerId = null;
+  }
+
+  state.isAnswerLocked = false;
+  elements.gamePanel.classList.remove("is-answer-locked");
+  elements.feedbackText.textContent = "";
+  elements.feedbackText.classList.remove("is-correct", "is-wrong");
+  elements.answerArea.querySelectorAll(".is-correct, .is-wrong").forEach((field) => {
+    field.classList.remove("is-correct", "is-wrong");
+  });
+}
+
+function lockAnswerInput() {
+  state.isAnswerLocked = true;
+  elements.gamePanel.classList.add("is-answer-locked");
+}
+
+function getAnswerFieldElement(fieldId) {
+  return elements.answerArea.querySelector(`[data-field="${fieldId}"]`);
+}
+
+function showCorrectAnswer(field) {
+  const question = getCurrentQuestion();
+  const levelConfig = getCurrentLevel();
+  const fields = getCurrentFields();
+  const nextIncompleteField = fields.find((candidate) => {
+    const enteredValue = state.answers[candidate.id];
+    return enteredValue === "" || Number(enteredValue) !== candidate.value;
+  });
+  const completesQuestion = !nextIncompleteField;
+
+  lockAnswerInput();
+  getAnswerFieldElement(field.id)?.classList.add("is-correct");
+  elements.feedbackText.textContent = completesQuestion ? "正解" : `${field.label} 正解`;
+  elements.feedbackText.classList.remove("is-wrong");
+  elements.feedbackText.classList.add("is-correct");
+
+  if (completesQuestion) {
+    recordQuestionResult(question);
+  }
+
+  state.feedbackTimerId = window.setTimeout(() => {
+    clearAnswerFeedback();
+
+    if (!completesQuestion) {
+      setActiveField(nextIncompleteField.id);
+      return;
+    }
+
+    state.currentIndex += 1;
+
+    if (state.currentIndex >= levelConfig.questionCount) {
+      finishGame();
+    } else {
+      renderQuestion();
+      beginQuestionTiming();
+    }
+  }, CORRECT_FEEDBACK_MS);
+}
+
+function showWrongAnswer(field) {
+  const questionKey = getCurrentQuestion()?.key;
+
+  lockAnswerInput();
+  markWrong("不正解");
+  getAnswerFieldElement(field.id)?.classList.add("is-wrong");
+
+  state.feedbackTimerId = window.setTimeout(() => {
+    if (getCurrentQuestion()?.key === questionKey) {
+      state.answers[field.id] = "";
+      renderAnswer();
+    }
+
+    clearAnswerFeedback();
+  }, WRONG_FEEDBACK_MS);
+}
+
+function evaluateActiveAnswer() {
+  const field = getActiveFieldConfig();
+
+  if (!field) {
     return;
   }
 
-  const levelConfig = getCurrentLevel();
-  const question = getCurrentQuestion();
+  const enteredValue = state.answers[field.id];
+  const expectedLength = String(field.value).length;
 
-  for (const field of question.answers) {
-    if (getNumericAnswer(field.id) === null) {
-      showInputPrompt(`${field.label}を入力してください`);
-      setActiveField(field.id);
-      return;
-    }
+  if (enteredValue.length < expectedLength) {
+    return;
   }
 
-  const isCorrect = question.answers.every((field) => getNumericAnswer(field.id) === field.value);
-
-  if (isCorrect) {
-    recordQuestionResult(question);
-    elements.feedbackText.textContent = "正解";
-    elements.feedbackText.classList.add("is-correct");
-    state.currentIndex += 1;
-
-    window.setTimeout(() => {
-      if (state.currentIndex >= levelConfig.questionCount) {
-        finishGame();
-      } else {
-        renderQuestion();
-        beginQuestionTiming();
-      }
-    }, 180);
+  if (Number(enteredValue) === field.value) {
+    showCorrectAnswer(field);
   } else {
-    markWrong("もう一度");
+    showWrongAnswer(field);
   }
 }
 
@@ -1202,7 +1255,7 @@ function getGrade(levelConfig, elapsed, mistakes) {
 }
 
 function appendDigit(digit) {
-  if (state.isCountingDown) {
+  if (state.isCountingDown || state.isAnswerLocked) {
     return;
   }
 
@@ -1214,10 +1267,11 @@ function appendDigit(digit) {
 
   state.answers[field.id] += digit;
   renderAnswer();
+  evaluateActiveAnswer();
 }
 
 function backspace() {
-  if (state.isCountingDown) {
+  if (state.isCountingDown || state.isAnswerLocked) {
     return;
   }
 
@@ -1232,7 +1286,7 @@ function backspace() {
 }
 
 function clearActiveField() {
-  if (state.isCountingDown) {
+  if (state.isCountingDown || state.isAnswerLocked) {
     return;
   }
 
@@ -1247,6 +1301,10 @@ function clearActiveField() {
 }
 
 function toggleActiveField(direction = 1) {
+  if (state.isCountingDown || state.isAnswerLocked) {
+    return;
+  }
+
   const fields = getCurrentFields();
 
   if (fields.length <= 1) {
@@ -1258,66 +1316,8 @@ function toggleActiveField(direction = 1) {
   setActiveField(fields[nextIndex].id);
 }
 
-function updateActionButtons() {
-  const fields = getCurrentFields();
-  const activeIndex = getActiveFieldIndex();
-
-  if (!fields.length || activeIndex < 0) {
-    elements.submitButton.textContent = "答える";
-    elements.clearButton.textContent = "クリア";
-    return;
-  }
-
-  if (activeIndex < fields.length - 1) {
-    elements.submitButton.textContent = `${fields[activeIndex + 1].label}へ進む`;
-    elements.clearButton.textContent = "クリア";
-    return;
-  }
-
-  elements.submitButton.textContent = "答える";
-  elements.clearButton.textContent = activeIndex > 0 ? `${fields[activeIndex - 1].label}に戻る` : "クリア";
-}
-
-function handleSubmitAction() {
-  if (state.isCountingDown) {
-    return;
-  }
-
-  const fields = getCurrentFields();
-  const activeIndex = getActiveFieldIndex();
-  const activeField = fields[activeIndex];
-
-  if (!activeField) {
-    return;
-  }
-
-  if (activeIndex < fields.length - 1) {
-    if (getNumericAnswer(activeField.id) === null) {
-      showInputPrompt(`${activeField.label}を入力してください`);
-      return;
-    }
-
-    setActiveField(fields[activeIndex + 1].id);
-    elements.feedbackText.textContent = "";
-    elements.feedbackText.classList.remove("is-correct");
-    return;
-  }
-
-  submitAnswer();
-}
-
 function handleClearAction() {
-  if (state.isCountingDown) {
-    return;
-  }
-
-  const fields = getCurrentFields();
-  const activeIndex = getActiveFieldIndex();
-
-  if (activeIndex > 0) {
-    setActiveField(fields[activeIndex - 1].id);
-    elements.feedbackText.textContent = "";
-    elements.feedbackText.classList.remove("is-correct");
+  if (state.isCountingDown || state.isAnswerLocked) {
     return;
   }
 
@@ -1327,6 +1327,7 @@ function handleClearAction() {
 function backToSetup() {
   stopTimer();
   clearCountdown();
+  clearAnswerFeedback();
   state.activeLevel = null;
   showPanel("setup");
   refreshDataPanels();
@@ -1531,8 +1532,6 @@ elements.keypad.addEventListener("click", (event) => {
     backspace();
   } else if (button.dataset.action === "clear") {
     handleClearAction();
-  } else if (button.dataset.action === "submit") {
-    handleSubmitAction();
   }
 });
 
@@ -1545,8 +1544,6 @@ document.addEventListener("keydown", (event) => {
     appendDigit(event.key);
   } else if (event.key === "Backspace") {
     backspace();
-  } else if (event.key === "Enter") {
-    handleSubmitAction();
   } else if (event.key === "Tab" || event.key === "ArrowRight") {
     event.preventDefault();
     toggleActiveField(1);

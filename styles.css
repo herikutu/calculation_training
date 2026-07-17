@@ -13,7 +13,6 @@
   --key: #f8fafc;
   --shadow: 0 22px 60px rgba(22, 32, 42, 0.16);
   --key-height: 62px;
-  --command-height: 93px;
 }
 
 * {
@@ -279,8 +278,7 @@ h2 {
   color: #fff;
 }
 
-.primary-action:hover,
-.submit-key:hover {
+.primary-action:hover {
   background: var(--accent-strong);
 }
 
@@ -522,6 +520,17 @@ h2 {
   background: var(--accent-soft);
 }
 
+.answer-field.is-correct {
+  border-color: var(--success);
+  background: #e8f6ee;
+}
+
+.answer-field.is-wrong {
+  border-color: var(--warning);
+  background: #fff1e8;
+  animation: answer-shake 160ms ease-in-out;
+}
+
 .field-label,
 .field-value {
   display: block;
@@ -551,6 +560,10 @@ h2 {
 
 .feedback.is-correct {
   color: var(--success);
+}
+
+.feedback.is-wrong {
+  color: var(--warning);
 }
 
 .keypad {
@@ -589,20 +602,24 @@ h2 {
   font-size: 0.9rem;
 }
 
-.keypad [data-key="0"] {
-  grid-column: span 2;
+.game-panel.is-answer-locked .keypad,
+.game-panel.is-answer-locked .answer-area {
+  pointer-events: none;
 }
 
-.keypad .submit-key {
-  grid-column: 1 / -1;
-  min-height: var(--command-height);
-  background: var(--accent);
-  color: #fff;
-}
+@keyframes answer-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
 
-.keypad .clear-key {
-  grid-column: 1 / -1;
-  min-height: var(--command-height);
+  35% {
+    transform: translateX(-4px);
+  }
+
+  70% {
+    transform: translateX(4px);
+  }
 }
 
 .countdown-overlay {
@@ -690,7 +707,6 @@ h2 {
 @media (max-width: 560px) {
   :root {
     --key-height: 52px;
-    --command-height: 78px;
   }
 
   .app-shell {
@@ -816,5 +832,11 @@ h2 {
 
   .keypad .utility-key {
     font-size: 0.82rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .answer-field.is-wrong {
+    animation: none;
   }
 }
